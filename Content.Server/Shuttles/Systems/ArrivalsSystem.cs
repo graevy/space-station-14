@@ -39,6 +39,7 @@ public sealed class ArrivalsSystem : EntitySystem
     [Dependency] private readonly MapLoaderSystem _loader = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly ShuttleSystem _shuttles = default!;
+    [Dependency] private readonly ShuttleTimerSystem _shuttleTimerSystem = default!;
     [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
     [Dependency] private readonly StationSystem _station = default!;
 
@@ -47,6 +48,11 @@ public sealed class ArrivalsSystem : EntitySystem
     /// </summary>
     public bool Enabled { get; private set; }
 
+    public float Cooldown;
+    public float Startup = ShuttleSystem.DefaultStartupTime;
+    public float Travel = ShuttleSystem.DefaultTravelTime;
+    public float Arrival = ShuttleSystem.DefaultArrivalTime;
+    public float Docked;
     public override void Initialize()
     {
         base.Initialize();
@@ -60,6 +66,8 @@ public sealed class ArrivalsSystem : EntitySystem
 
         SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
         SubscribeLocalEvent<ArrivalsShuttleComponent, FTLStartedEvent>(OnArrivalsFTL);
+        SubscribeLocalEvent<ArrivalsShuttleComponent, FTLCompletedEvent>(OnArrivalsDocked);
+
 
         // Don't invoke immediately as it will get set in the natural course of things.
         Enabled = _cfgManager.GetCVar(CCVars.ArrivalsShuttles);
@@ -67,6 +75,9 @@ public sealed class ArrivalsSystem : EntitySystem
 
         // Command so admins can set these for funsies
         _console.RegisterCommand("arrivals", ArrivalsCommand, ArrivalsCompletion);
+
+        Cooldown = _cfgManager.GetCVar(CCVars.ArrivalsCooldown);
+        Docked = Cooldown - Travel;
     }
 
     private void OnShuttleTag(EntityUid uid, ArrivalsShuttleComponent component, ref FTLTagEvent args)
@@ -196,6 +207,12 @@ public sealed class ArrivalsSystem : EntitySystem
             RemCompDeferred<PendingClockInComponent>(pUid);
             RemCompDeferred<AutoOrientComponent>(pUid);
         }
+        _shuttleTimerSystem.OnArrivalsFTL(shuttleUid, component, ref args);
+    }
+
+    private void OnArrivalsDocked(EntityUid uid, ArrivalsShuttleComponent component, ref FTLCompletedEvent args)
+    {
+        _shuttleTimerSystem.OnArrivalsDocked(uid, component, ref args);
     }
 
     private void DumpChildren(EntityUid uid,
@@ -243,7 +260,7 @@ public sealed class ArrivalsSystem : EntitySystem
 
             var points = EntityQueryEnumerator<SpawnPointComponent, TransformComponent>();
             var possiblePositions = new List<EntityCoordinates>();
-            while ( points.MoveNext(out var uid, out var spawnPoint, out var xform))
+            while (points.MoveNext(out var uid, out var spawnPoint, out var xform))
             {
                 if (spawnPoint.SpawnType != SpawnPointType.LateJoin || xform.MapID != mapId)
                     continue;
@@ -275,7 +292,7 @@ public sealed class ArrivalsSystem : EntitySystem
         var possiblePositions = new ValueList<EntityCoordinates>(32);
 
         // Find a spawnpoint on the same map as the player is already docked with now.
-        while ( points.MoveNext(out var uid, out var spawnPoint, out var xform))
+        while (points.MoveNext(out var uid, out var spawnPoint, out var xform))
         {
             if (spawnPoint.SpawnType == SpawnPointType.LateJoin &&
                 _station.GetOwningStation(uid, xform) == stationId)
@@ -354,31 +371,37 @@ public sealed class ArrivalsSystem : EntitySystem
                 if (comp.NextTransfer > curTime || !TryComp<StationDataComponent>(comp.Station, out var data))
                     continue;
 
-                var tripTime = ShuttleSystem.DefaultTravelTime + ShuttleSystem.DefaultStartupTime ;
+                // for determining which shuttle timers to update
+                var filter = new MapFilter { Comparator = (timerUid, mapUid) => timerUid == mapUid };
+
+                var tripTime = ShuttleSystem.DefaultTravelTime + ShuttleSystem.DefaultStartupTime;
 
                 // Go back to arrivals source
-                if (xform.MapUid != arrivalsXform.MapUid)
+                if (xform.MapUid != arrivalsXform.MapUid && arrivals.IsValid())
                 {
                     if (arrivals.IsValid())
                         _shuttles.FTLTravel(uid, shuttle, arrivals, dock: true);
 
                     comp.NextArrivalsTime = _timing.CurTime + TimeSpan.FromSeconds(tripTime);
                 }
+
                 // Go to station
                 else
                 {
                     var targetGrid = _station.GetLargestGrid(data);
 
                     if (targetGrid != null)
+                    {
                         _shuttles.FTLTravel(uid, shuttle, targetGrid.Value, dock: true);
+                        filter = new MapFilter { Comparator = (timerUid, mapUid) => timerUid != mapUid };
+                    }
 
                     // The ArrivalsCooldown includes the trip there, so we only need to add the time taken for
                     // the trip back.
                     comp.NextArrivalsTime = _timing.CurTime + TimeSpan.FromSeconds(
                         _cfgManager.GetCVar(CCVars.ArrivalsCooldown) + tripTime);
                 }
-
-                comp.NextTransfer += TimeSpan.FromSeconds(_cfgManager.GetCVar(CCVars.ArrivalsCooldown));
+                comp.NextTransfer += TimeSpan.FromSeconds(Cooldown);
             }
         }
     }
@@ -475,7 +498,16 @@ public sealed class ArrivalsSystem : EntitySystem
             arrivalsComp.Station = uid;
             EnsureComp<ProtectedGridComponent>(uid);
             _shuttles.FTLTravel(component.Shuttle, shuttleComp, arrivals, hyperspaceTime: 10f, dock: true);
-            arrivalsComp.NextTransfer = _timing.CurTime + TimeSpan.FromSeconds(_cfgManager.GetCVar(CCVars.ArrivalsCooldown));
+            arrivalsComp.NextTransfer = _timing.CurTime + TimeSpan.FromSeconds(Cooldown - 10f);
+
+            // Shuttle timer bootstrap stuff
+            if (!TryComp<ShuttleTimerComponent>(component.Shuttle, out var shuttleTimerComp))
+                return;
+            _shuttleTimerSystem.PairShuttleWithRemotes(shuttleTimerComp, RemoteShuttleTimerMask.Arrivals);
+
+            // displays the ETA at roundstart on the arrivals terminal map
+            var remote = new RemoteShuttleTimerEvent(TimeSpan.FromSeconds(10f + Startup));
+            _shuttleTimerSystem.RaiseEventOnShuttles<ArrivalsShuttleComponent, RemoteShuttleTimerEvent>(ref remote);
         }
 
         // Don't start the arrivals shuttle immediately docked so power has a time to stabilise?

@@ -6,6 +6,8 @@ using Content.Server.Chat;
 using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Server.GameTicking;
+using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Events;
 using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
 using Content.Shared.Database;
@@ -33,6 +35,7 @@ namespace Content.Server.RoundEnd
         [Dependency] private readonly ChatSystem _chatSystem = default!;
         [Dependency] private readonly GameTicker _gameTicker = default!;
         [Dependency] private readonly EmergencyShuttleSystem _shuttle = default!;
+        [Dependency] private readonly ShuttleTimerSystem _shuttleTimerSystem = default!;
         [Dependency] private readonly StationSystem _stationSystem = default!;
 
         public TimeSpan DefaultCooldownDuration { get; set; } = TimeSpan.FromSeconds(30);
@@ -137,8 +140,8 @@ namespace Content.Server.RoundEnd
             }
             else
             {
-               time = countdownTime.Minutes;
-               units = "eta-units-minutes";
+                time = countdownTime.Minutes;
+                units = "eta-units-minutes";
             }
 
             if (autoCall)
@@ -168,6 +171,9 @@ namespace Content.Server.RoundEnd
             ExpectedCountdownEnd = _gameTiming.CurTime + countdownTime;
             Timer.Spawn(countdownTime, _shuttle.CallEmergencyShuttle, _countdownTokenSource.Token);
 
+            var ev = new AllShuttleTimerEvent(countdownTime);
+            _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
+
             ActivateCooldown();
             RaiseLocalEvent(RoundEndSystemChangedEvent.Default);
         }
@@ -194,6 +200,9 @@ namespace Content.Server.RoundEnd
                 Loc.GetString("Station"), false, colorOverride: Color.Gold);
 
             SoundSystem.Play("/Audio/Announcements/shuttlerecalled.ogg", Filter.Broadcast());
+
+            var ev = new AllShuttleTimerEvent(TimeSpan.Zero);
+            _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
 
             LastCountdownStart = null;
             ExpectedCountdownEnd = null;
@@ -229,6 +238,10 @@ namespace Content.Server.RoundEnd
                     "round-end-system-round-restart-eta-announcement",
                     ("time", time),
                     ("units", Loc.GetString(unitsLocString))));
+
+            var ev = new AllShuttleTimerEvent(countdownTime);
+            _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
+
             Timer.Spawn(countdownTime, AfterEndRoundRestart, _countdownTokenSource.Token);
         }
 

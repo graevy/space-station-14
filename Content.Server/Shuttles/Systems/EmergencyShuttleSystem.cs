@@ -9,6 +9,7 @@ using Content.Server.GameTicking.Events;
 using Content.Server.Popups;
 using Content.Server.RoundEnd;
 using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Events;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.Access.Systems;
@@ -52,6 +53,7 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
     [Dependency] private readonly RoundEndSystem _roundEnd = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly ShuttleSystem _shuttle = default!;
+    [Dependency] private readonly ShuttleTimerSystem _shuttleTimerSystem = default!;
     [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
 
@@ -170,6 +172,7 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         });
     }
 
+    // this DOCKS the shuttle onto the station. the shuttle call is in roundendsystem
     /// <summary>
     /// Calls the emergency shuttle for the station.
     /// </summary>
@@ -203,6 +206,9 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
                 var angle = _dock.GetAngle(stationShuttle.EmergencyShuttle.Value, xform, targetGrid.Value, targetXform, xformQuery);
                 _chatSystem.DispatchStationAnnouncement(stationUid, Loc.GetString("emergency-shuttle-docked", ("time", $"{_consoleAccumulator:0}"), ("direction", angle.GetDir())), playDefaultSound: false);
             }
+
+            var ev = new AllShuttleTimerEvent(TimeSpan.FromSeconds(_consoleAccumulator));
+            _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
 
             _logger.Add(LogType.EmergencyShuttle, LogImpact.High, $"Emergency shuttle {ToPrettyString(stationUid)} docked with stations");
             // TODO: Need filter extensions or something don't blame me.
@@ -252,6 +258,7 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
 
         if (!_emergencyShuttleEnabled)
         {
+            // a LOT of the relevant shuttle code is in the roundend system
             _roundEnd.EndRound();
             return;
         }
@@ -375,6 +382,11 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         component.EmergencyShuttle = shuttle;
         EnsureComp<ProtectedGridComponent>(shuttle.Value);
         EnsureComp<PreventPilotComponent>(shuttle.Value);
+        EnsureComp<EmergencyShuttleComponent>(shuttle.Value);
+
+        if (!TryComp<ShuttleTimerComponent>(shuttle.Value, out var shuttleTimerComp))
+            return;
+        _shuttleTimerSystem.PairShuttleWithRemotes(shuttleTimerComp, RemoteShuttleTimerMask.Emergency);
     }
 
     private void OnEscapeUnpaused(EntityUid uid, EscapePodComponent component, ref EntityUnpausedEvent args)

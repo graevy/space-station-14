@@ -132,6 +132,7 @@ public sealed partial class EmergencyShuttleSystem
         UpdateConsoleState(uid, component);
     }
 
+    // UpdateEmergencyConsole SENDS THE EMERGENCY SHUTTLE TO CENTCOMM???
     private void UpdateEmergencyConsole(float frameTime)
     {
         // Add some buffer time so eshuttle always first.
@@ -373,6 +374,10 @@ public sealed partial class EmergencyShuttleSystem
         RaiseLocalEvent(new EmergencyShuttleAuthorizedEvent());
         AnnounceLaunch();
         UpdateAllEmergencyConsoles();
+
+        var ev = new AllShuttleTimerEvent(TimeSpan.FromSeconds(_authorizeTime));
+        _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
+
         return true;
     }
 
