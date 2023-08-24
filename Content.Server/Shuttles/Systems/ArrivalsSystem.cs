@@ -377,7 +377,7 @@ public sealed class ArrivalsSystem : EntitySystem
                 var tripTime = ShuttleSystem.DefaultTravelTime + ShuttleSystem.DefaultStartupTime;
 
                 // Go back to arrivals source
-                if (xform.MapUid != arrivalsXform.MapUid && arrivals.IsValid())
+                if (xform.MapUid != arrivalsXform.MapUid)
                 {
                     if (arrivals.IsValid())
                         _shuttles.FTLTravel(uid, shuttle, arrivals, dock: true);
