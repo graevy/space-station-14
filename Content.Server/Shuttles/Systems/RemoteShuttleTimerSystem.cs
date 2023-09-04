@@ -8,15 +8,13 @@ namespace Content.Server.Shuttles.Systems
     /// </summary>
     public sealed partial class ShuttleTimerSystem : EntitySystem
     {
-        [Dependency] private readonly ArrivalsSystem _arrivalsSystem = default!;
-
         /// <summary>
         /// Called by a remote to pair with shuttles
         /// </summary>
         private void PairRemoteWithShuttles(EntityUid uid, RemoteShuttleTimerComponent component, ComponentStartup args)
         {
-            var query = EntityQuery<ShuttleTimerComponent, ShuttleComponent>(true);
-            foreach (var (shuttleTimerComp, _) in query)
+            // var query = EntityQuery<ShuttleTimerComponent, ShuttleComponent>(true);
+            foreach (var (shuttleTimerComp, _) in EntityQuery<ShuttleTimerComponent, ShuttleComponent>(true))
             {
                 if (shuttleTimerComp.PairWith == component.PairWith)
                     shuttleTimerComp.RemoteScreens.Add(uid);
@@ -45,13 +43,13 @@ namespace Content.Server.Shuttles.Systems
             if (!HasComp<ShuttleTimerComponent>(uid))
                 return;
 
-            var local = new LocalShuttleTimerEvent(TimeSpan.FromSeconds(_arrivalsSystem.Docked));
+            var local = new LocalShuttleTimerEvent(TimeSpan.FromSeconds(shuttleComp.DockTime));
             RaiseLocalEvent(uid, ref local);
 
             // remote timers at the origin (where we just docked)
             var originRemote = new RemoteShuttleTimerEvent
             (
-                TimeSpan.FromSeconds(_arrivalsSystem.Docked),
+                TimeSpan.FromSeconds(shuttleComp.DockTime),
                 new MapFilter
                 {
                     Comparator = (timerMapUid, shuttleMapUid) => timerMapUid == shuttleMapUid,
@@ -68,7 +66,7 @@ namespace Content.Server.Shuttles.Systems
 
             var originRemote = new RemoteShuttleTimerEvent
             (
-                TimeSpan.FromSeconds(_arrivalsSystem.Cooldown + _arrivalsSystem.Travel),
+                TimeSpan.FromSeconds(component.Cooldown + component.Travel),
                 new MapFilter
                 {
                     Comparator = (timerMapUid, shuttleMapUid) => timerMapUid == shuttleMapUid,

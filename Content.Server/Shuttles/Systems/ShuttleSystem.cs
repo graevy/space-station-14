@@ -106,7 +106,6 @@ public sealed partial class ShuttleSystem : SharedShuttleSystem
             return;
 
         EntityManager.EnsureComponent<ShuttleComponent>(ev.EntityUid);
-        EntityManager.EnsureComponent<ShuttleTimerComponent>(ev.EntityUid);
     }
 
     private void OnShuttleStartup(EntityUid uid, ShuttleComponent component, ComponentStartup args)

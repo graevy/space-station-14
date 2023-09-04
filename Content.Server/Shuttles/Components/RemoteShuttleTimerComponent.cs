@@ -1,7 +1,7 @@
 namespace Content.Server.Shuttles.Components
 {
     /// <summary>
-    /// Shuttle timers that are not located on their shuttle, but still need to display timing, e.g. the hallway evac timers
+    /// Shuttle timers that aren't on their shuttle e.g. the hallway evac timers
     /// </summary>
     [RegisterComponent]
     public sealed partial class RemoteShuttleTimerComponent : Component

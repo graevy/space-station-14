@@ -15,4 +15,18 @@ public sealed partial class ArrivalsShuttleComponent : Component
     [DataField("nextArrivalsTime", customTypeSerializer:typeof(TimeOffsetSerializer))]
     public TimeSpan NextArrivalsTime;
 
+    [DataField("cooldown")]
+    public float Cooldown;
+
+    [DataField("startup")]
+    public float Startup;
+
+    [DataField("travel")]
+    public float Travel;
+
+    [DataField("arrival")]
+    public float Arrival;
+
+    [DataField("dockTime")]
+    public float DockTime;
 }
