@@ -5,6 +5,8 @@ using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Server.Chat.Systems;
 using Content.Server.Communications;
+using Content.Server.DeviceNetwork.Events;
+using Content.Server.DeviceNetwork.Systems;
 using Content.Server.GameTicking.Events;
 using Content.Server.Popups;
 using Content.Server.RoundEnd;
@@ -46,6 +48,8 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
     [Dependency] private readonly AccessReaderSystem _reader = default!;
     [Dependency] private readonly ChatSystem _chatSystem = default!;
     [Dependency] private readonly CommunicationsConsoleSystem _commsConsole = default!;
+    [Dependency] private readonly DeviceNetworkSystem _deviceNetworkSystem = default!;
+
     [Dependency] private readonly DockingSystem _dock = default!;
     [Dependency] private readonly IdCardSystem _idSystem = default!;
     [Dependency] private readonly MapLoaderSystem _map = default!;
@@ -53,7 +57,6 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
     [Dependency] private readonly RoundEndSystem _roundEnd = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly ShuttleSystem _shuttle = default!;
-    [Dependency] private readonly ShuttleTimerSystem _shuttleTimerSystem = default!;
     [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
 
@@ -207,8 +210,12 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
                 _chatSystem.DispatchStationAnnouncement(stationUid, Loc.GetString("emergency-shuttle-docked", ("time", $"{_consoleAccumulator:0}"), ("direction", angle.GetDir())), playDefaultSound: false);
             }
 
-            var ev = new AllShuttleTimerEvent(TimeSpan.FromSeconds(_consoleAccumulator));
-            _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
+            var payload = new DeviceNetworkEvent
+            {
+                [Broadcast] = true,
+                [BroadcastTime] = TimeSpan.FromSeconds(_consoleAccumulator);
+            }
+            RaiseLocalEvent(stationShuttle.EmergencyShuttle.Value, payload);
 
             _logger.Add(LogType.EmergencyShuttle, LogImpact.High, $"Emergency shuttle {ToPrettyString(stationUid)} docked with stations");
             // TODO: Need filter extensions or something don't blame me.
@@ -383,10 +390,6 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         EnsureComp<ProtectedGridComponent>(shuttle.Value);
         EnsureComp<PreventPilotComponent>(shuttle.Value);
         EnsureComp<EmergencyShuttleComponent>(shuttle.Value);
-
-        if (!TryComp<ShuttleTimerComponent>(shuttle.Value, out var shuttleTimerComp))
-            return;
-        _shuttleTimerSystem.PairShuttleWithRemotes(shuttleTimerComp, RemoteShuttleTimerMask.Emergency);
     }
 
     private void OnEscapeUnpaused(EntityUid uid, EscapePodComponent component, ref EntityUnpausedEvent args)

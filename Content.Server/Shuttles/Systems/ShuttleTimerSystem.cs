@@ -7,6 +7,8 @@ using Content.Server.TextScreen.Events;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Shuttles.Systems;
 using Content.Server.DeviceLinking.Components;
+using Content.Server.DeviceNetwork.Events;
+using Content.Server.DeviceNetwork.Systems;
 using Content.Shared.MachineLinking;
 using Content.Shared.TextScreen;
 using Content.Shared.CCVar;
@@ -27,143 +29,232 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Shuttles.Systems
 {
-    public struct MapFilter
-    {
-        public Func<EntityUid, EntityUid, bool> Comparator;
-        /// <summary>the MapUid that each timer's map is filtered against</summary>
-        public EntityUid MapUid;
-    }
+    // public struct MapFilter
+    // {
+    //     public Func<EntityUid, EntityUid, bool> Comparator;
+    //     /// <summary>the MapUid that each timer's map is filtered against</summary>
+    //     public EntityUid MapUid;
+    // }
 
     public sealed partial class ShuttleTimerSystem : EntitySystem
     {
+
+        [Dependency] private readonly DeviceNetworkSystem _deviceNetworkSystem = default!;
+
         public override void Initialize()
         {
             base.Initialize();
 
-            SubscribeLocalEvent<ShuttleTimerComponent, ComponentStartup>(OnComponentStartup);
-            SubscribeLocalEvent<RemoteShuttleTimerComponent, ComponentStartup>(PairRemoteWithShuttles);
+            // SubscribeLocalEvent<ShuttleTimerComponent, ComponentStartup>(OnComponentStartup);
+            // SubscribeLocalEvent<RemoteShuttleTimerComponent, ComponentStartup>(PairRemoteWithShuttles);
 
-            SubscribeLocalEvent<ShuttleTimerComponent, AllShuttleTimerEvent>(OnAll);
-            SubscribeLocalEvent<ShuttleTimerComponent, LocalShuttleTimerEvent>(OnLocal);
-            SubscribeLocalEvent<ShuttleTimerComponent, RemoteShuttleTimerEvent>(OnRemote);
-            SubscribeLocalEvent<ShuttleTimerComponent, FTLStartedEvent>(OnFTLStart);
+            // SubscribeLocalEvent<ShuttleTimerComponent, AllShuttleTimerEvent>(OnAll);
+            // SubscribeLocalEvent<ShuttleTimerComponent, LocalShuttleTimerEvent>(OnLocal);
+            // SubscribeLocalEvent<ShuttleTimerComponent, RemoteShuttleTimerEvent>(OnRemote);
+            // SubscribeLocalEvent<ShuttleTimerComponent, FTLStartedEvent>(OnFTLStart);
+
+            SubscribeLocalEvent<DeviceNetworkComponent, DeviceNetworkPacketEvent>(OnPacketReceived);
         }
+
+        private void OnPacketReceived(EntityUid uid, DeviceNetworkComponent component, DeviceNetworkPacketEvent args)
+        {
+            // some timer updates just want to broadcast their timing to every networked timer
+            if (!args.Data.TryGetValue("Broadcast")) && (args.Data.TryGetValue("BroadcastTime"), out var duration)
+            {
+                ev = new TextScreenTimerEvent(duration);
+                RaiseLocalEvent(uid, ev);
+                return;
+            }
+
+            if (!TryComp<TransformComponent>(uid, out var timerXform)) ||
+            (!args.Data.TryGetValue(SourceMap), out var source) ||
+            (!args.Data.TryGetValue(DestMap), out var dest) ||
+            (!args.Data.TryGetValue(ShuttleGrid), out var shuttle)
+                return;
+
+            string key;
+            switch (timerXform.GridUid)
+            {
+                case shuttle:
+                    key = "LocalTimer";
+                    break;
+                case source:
+                    key = "SourceTimer";
+                    break;
+                case dest:
+                    key = "DestTimer";
+                    break;
+                default:
+                    return;
+            }
+
+            if (!args.Data.TryGetValue(key), out TimeSpan duration)
+                return;
+
+            var ev = new TextScreenTimerEvent(duration);
+            RaiseLocalEvent(uid, ref ev);
+        }
+
         /// <summary>
         /// Attach child shuttletimer screens to parent shuttletimer components.
         /// </summary>
-        private void OnComponentStartup(EntityUid uid, ShuttleTimerComponent timerComp, ComponentStartup args)
-        {
-            if (!TryComp<TransformComponent>(uid, out var xform))
-                return;
+        // private void OnComponentStartup(EntityUid uid, ShuttleTimerComponent timerComp, ComponentStartup args)
+        // {
+        //     if (!TryComp<TransformComponent>(uid, out var xform))
+        //         return;
 
-            if (!TryComp<ShuttleTimerComponent>(xform.ParentUid, out var parentComp) ||
-                !HasComp<ShuttleComponent>(xform.ParentUid))
-                return;
+        //     if (!TryComp<DeviceNetworkComponent>(uid, out var net))
+        //         return;
 
-            parentComp.LocalScreens.Add(uid);
-        }
+        //     if (!TryComp<DeviceNetworkComponent>(xform.ParentUid, out var parentComp) ||
+        //         !HasComp<ShuttleTimerComponent>(xform.ParentUid) ||
+        //         !HasComp<ShuttleComponent>(xform.ParentUid))
+        //         return;
 
-        private void OnFTLStart(EntityUid uid, ShuttleTimerComponent component, ref FTLStartedEvent args)
-        {
-            if (!TryComp<FTLComponent>(uid, out var ftl))
-                return;
 
-            UpdateLocalScreens(component, TimeSpan.FromSeconds(ftl.TravelTime));
-        }
+        //     parentComp.LocalScreens.Add(uid);
+        // }
 
-        private void OnAll(EntityUid uid, ShuttleTimerComponent component, ref AllShuttleTimerEvent args)
-        {
-            UpdateLocalScreens(component, args.Countdown);
-            UpdateRemoteScreens(component, args.Countdown);
-        }
+        // private void OnFTLStart(EntityUid uid, ShuttleTimerComponent component, ref FTLStartedEvent args)
+        // {
+        //     if (!TryComp<FTLComponent>(uid, out var ftl))
+        //         return;
 
-        private void OnLocal(EntityUid uid, ShuttleTimerComponent component, ref LocalShuttleTimerEvent args)
-        {
-            UpdateLocalScreens(component, args.Countdown);
-        }
+        //     // if (!TryComp<DeviceNetworkComponent>(uid, out var net))
+        //     //     return;
 
-        private void OnRemote(EntityUid uid, ShuttleTimerComponent component, ref RemoteShuttleTimerEvent args)
-        {
-            if (args.Filter == null)
-                UpdateRemoteScreens(component, args.Countdown);
-            else
-                UpdateRemoteScreens(component, args.Countdown, (MapFilter) args.Filter);
-        }
+        //     if (!TryComp<TransformComponent>(uid, out var xform))
+        //         return;
+
+        //     var payload = new NetworkPayload
+        //     {
+        //         [ShuttleGrid] = xform.GridUid,
+        //         [SourceMap] = args.FromMapUid,
+        //         [DestMap] = args.TargetCoordinates.GetMapId(EntityManager), // id vs uid??
+        //         // time to display on the timers inside the shuttle
+        //         [LocalTimer] = ftl.TravelTime,
+        //         [SourceTimer] = component.SourceTime,
+        //         [DestTimer] = ftl.TravelTime
+        //     }
+
+        //     // UpdateLocalScreens(component, TimeSpan.FromSeconds(ftl.TravelTime));
+        // }
+
+        // public void FilteredUpdate(TimeSpan duration, Func<EntityUid, EntityUid, bool> filter)
+        // {
+        //     var payload = new NetworkPayload
+        //     {
+        //         [ShuttleGrid] = xform.GridUid,
+        //         [SourceMap] = args.FromMapUid,
+        //         [DestMap] = args.TargetCoordinates.GetMapId(EntityManager), // id vs uid??
+        //         // time to display on the timers inside the shuttle
+        //         [LocalTimer] = ftl.TravelTime,
+        //         [SourceTimer] = component.SourceTime,
+        //         [DestTimer] = ftl.TravelTime
+        //     }
+        // }
+
+        // public void UnfilteredUpdate(TimeSpan duration)
+        // {
+        //     var payload = new NetworkPayload
+        //     {
+
+        //     }
+        // }
+
+        // private void OnAll(EntityUid uid, ShuttleTimerComponent component, ref AllShuttleTimerEvent args)
+        // {
+        //     UpdateLocalScreens(component, args.Countdown);
+        //     UpdateRemoteScreens(component, args.Countdown);
+        // }
+
+        // private void OnLocal(EntityUid uid, ShuttleTimerComponent component, ref LocalShuttleTimerEvent args)
+        // {
+        //     UpdateLocalScreens(component, args.Countdown);
+        // }
+
+        // private void OnRemote(EntityUid uid, ShuttleTimerComponent component, ref RemoteShuttleTimerEvent args)
+        // {
+        //     if (args.Filter == null)
+        //         UpdateRemoteScreens(component, args.Countdown);
+        //     else
+        //         UpdateRemoteScreens(component, args.Countdown, (MapFilter) args.Filter);
+        // }
 
         /// <summary>
         /// Update all child screens of parent <see cref="ShuttleTimerComponent"/>.
         /// </summary>
-        private void UpdateLocalScreens(ShuttleTimerComponent component, TimeSpan duration)
-        {
-            foreach (var timerUid in component.LocalScreens)
-            {
-                RemComp<ActiveTextScreenTimerComponent>(timerUid);
+        // private void UpdateLocalScreens(ShuttleTimerComponent component, TimeSpan duration)
+        // {
+        //     foreach (var timerUid in component.LocalScreens)
+        //     {
+        //         RemComp<ActiveTextScreenTimerComponent>(timerUid);
 
-                // this kept not triggering on TimeSpan.Zero
-                if (duration <= TimeSpan.MinValue)
-                    continue;
+        //         // this kept not triggering on TimeSpan.Zero
+        //         if (duration <= TimeSpan.MinValue)
+        //             continue;
 
-                // set delay and start
-                var ev = new TextScreenTimerEvent(duration);
-                RaiseLocalEvent(timerUid, ref ev);
-            }
-        }
+        //         // set delay and start
+        //         var ev = new TextScreenTimerEvent(duration);
+        //         RaiseLocalEvent(timerUid, ref ev);
+        //     }
+        // }
 
         /// <summary>
         /// Update all synced remote screens in a <see cref="ShuttleTimerComponent"/>. Filter by delegate.
         /// </summary>
         /// <param name="filter">Delegate determining remote timer update eligibility from shuttleUid's map</param>
-        private void UpdateRemoteScreens(ShuttleTimerComponent component, TimeSpan duration, MapFilter filter)
-        {
-            foreach (var timerUid in component.RemoteScreens)
-            {
-                if (!TryComp<TransformComponent>(timerUid, out var timerXform) || timerXform.MapUid == null)
-                    continue;
+        // private void UpdateRemoteScreens(ShuttleTimerComponent component, TimeSpan duration, MapFilter filter)
+        // {
+        //     foreach (var timerUid in component.RemoteScreens)
+        //     {
+        //         if (!TryComp<TransformComponent>(timerUid, out var timerXform) || timerXform.MapUid == null)
+        //             continue;
 
-                if (!filter.Comparator(timerXform.MapUid.Value, filter.MapUid))
-                    continue;
+        //         if (!filter.Comparator(timerXform.MapUid.Value, filter.MapUid))
+        //             continue;
 
-                RemComp<ActiveTextScreenTimerComponent>(timerUid);
+        //         RemComp<ActiveTextScreenTimerComponent>(timerUid);
 
-                if (duration <= TimeSpan.MinValue)
-                    continue;
+        //         if (duration <= TimeSpan.MinValue)
+        //             continue;
 
-                var ev = new TextScreenTimerEvent(duration);
-                RaiseLocalEvent(timerUid, ref ev);
-            }
-        }
+        //         var ev = new TextScreenTimerEvent(duration);
+        //         RaiseLocalEvent(timerUid, ref ev);
+        //     }
+        // }
 
         /// <summary>
         /// Update all synced remote screens in a <see cref="ShuttleTimerComponent"/>. No filtering.
         /// </summary>
-        private void UpdateRemoteScreens(ShuttleTimerComponent component, TimeSpan duration)
-        {
-            foreach (var timerUid in component.RemoteScreens)
-            {
-                RemComp<ActiveTextScreenTimerComponent>(timerUid);
+        // private void UpdateRemoteScreens(ShuttleTimerComponent component, TimeSpan duration)
+        // {
+        //     foreach (var timerUid in component.RemoteScreens)
+        //     {
+        //         RemComp<ActiveTextScreenTimerComponent>(timerUid);
 
-                if (duration <= TimeSpan.MinValue)
-                    continue;
+        //         if (duration <= TimeSpan.MinValue)
+        //             continue;
 
-                var ev = new TextScreenTimerEvent(duration);
-                RaiseLocalEvent(timerUid, ref ev);
-            }
-        }
+        //         var ev = new TextScreenTimerEvent(duration);
+        //         RaiseLocalEvent(timerUid, ref ev);
+        //     }
+        // }
 
         // never got an answer figuring out how to do this. there's definitely a better pattern
         /// <summary>
         /// Raises a TEvent on each entity containing TComp.
         /// </summary>
-        public void RaiseEventOnShuttles<TComp, TEvent>(ref TEvent ev)
-            where TComp : Component
-            where TEvent : struct
-        {
-            var query = AllEntityQuery<TComp>();
-            while (query.MoveNext(out var uid, out _))
-            {
-                RaiseLocalEvent(uid, ref ev);
-            }
-        }
+        // public void RaiseEventOnShuttles<TComp, TEvent>(ref TEvent ev)
+        //     where TComp : Component
+        //     where TEvent : struct
+        // {
+        //     var query = AllEntityQuery<TComp>();
+        //     while (query.MoveNext(out var uid, out _))
+        //     {
+        //         RaiseLocalEvent(uid, ref ev);
+        //     }
+        // }
 
         // backend of a feature to pair a shuttle timer manually, for player-created shuttles
         /// <summary>

@@ -375,8 +375,12 @@ public sealed partial class EmergencyShuttleSystem
         AnnounceLaunch();
         UpdateAllEmergencyConsoles();
 
-        var ev = new AllShuttleTimerEvent(TimeSpan.FromSeconds(_authorizeTime));
-        _shuttleTimerSystem.RaiseEventOnShuttles<EmergencyShuttleComponent, AllShuttleTimerEvent>(ref ev);
+        var payload = new DeviceNetworkEvent
+        {
+            [Broadcast] = true,
+            [BroadcastTime] = TimeSpan.FromSeconds(_authorizeTime);
+        }
+        _deviceNetworkSystem.QueuePacket(null, null, payload);
 
         return true;
     }

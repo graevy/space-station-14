@@ -4,11 +4,13 @@ namespace Content.Server.Shuttles.Components
     public sealed partial class ShuttleTimerComponent : Component
     {
         // these are hashsets because there's a lot of redundant pairing rn
-        [ViewVariables]
-        public HashSet<EntityUid> LocalScreens = new();
+        // [ViewVariables]
+        // public HashSet<EntityUid> LocalScreens = new();
 
-        [ViewVariables]
-        public HashSet<EntityUid> RemoteScreens = new();
+        // [ViewVariables]
+        // public HashSet<EntityUid> RemoteScreens = new();
+        [DataField("sourceTime"), ViewVariables]
+        public TimeSpan? SourceTime;
 
         [ViewVariables]
         public TimeSpan? Duration;

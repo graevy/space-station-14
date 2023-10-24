@@ -110,22 +110,24 @@
   description: Displays shuttle timing information.
   components:
   - type: ShuttleTimer
+  - type: DeviceNetwork
+    receiveFrequencyId: ShuttleTimer
 
 - type: entity
   id: EvacShuttleTimer
   parent: ShuttleTimer
   name: evac timer
   components:
-  - type: RemoteShuttleTimer
-    pairWith: 1
+  - type: DeviceNetwork
+    receiveFrequencyId: EvacShuttleTimer
 
 - type: entity
   id: ArrivalsShuttleTimer
   parent: ShuttleTimer
   name: arrivals timer
   components:
-  - type: RemoteShuttleTimer
-    pairWith: 2
+  - type: DeviceNetwork
+    receiveFrequencyId: ArrivalsShuttleTimer
 
 # Construction Frame
 
