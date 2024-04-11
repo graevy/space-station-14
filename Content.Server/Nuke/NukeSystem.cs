@@ -1,18 +1,23 @@
 using Content.Server.AlertLevel;
 using Content.Server.Audio;
 using Content.Server.Chat.Systems;
+using Content.Server.DeviceNetwork.Components;
+using Content.Server.DeviceNetwork.Systems;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
+using Content.Server.Screens.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.Audio;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Coordinates.Helpers;
+using Content.Shared.DeviceNetwork;
 using Content.Shared.DoAfter;
 using Content.Shared.Examine;
 using Content.Shared.Maps;
 using Content.Shared.Nuke;
 using Content.Shared.Popups;
+using Content.Shared.TextScreen;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -36,6 +41,7 @@ public sealed class NukeSystem : EntitySystem
     [Dependency] private readonly NavMapSystem _navMap = default!;
     [Dependency] private readonly PointLightSystem _pointLight = default!;
     [Dependency] private readonly PopupSystem _popups = default!;
+    [Dependency] private readonly DeviceNetworkSystem _net = default!;
     [Dependency] private readonly ServerGlobalSoundSystem _sound = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
@@ -303,7 +309,7 @@ public sealed class NukeSystem : EntitySystem
         // play alert sound if time is running out
         if (nuke.RemainingTime <= nuke.AlertSoundTime && !nuke.PlayedAlertSound)
         {
-            _sound.PlayGlobalOnStation(uid, _audio.GetSound(nuke.AlertSound), new AudioParams{Volume = -5f});
+            _sound.PlayGlobalOnStation(uid, _audio.GetSound(nuke.AlertSound), new AudioParams { Volume = -5f });
             _sound.StopStationEventMusic(uid, StationEventMusicType.Nuke);
             nuke.PlayedAlertSound = true;
             UpdateAppearance(uid, nuke);
@@ -454,11 +460,6 @@ public sealed class NukeSystem : EntitySystem
         if (stationUid != null)
             _alertLevel.SetLevel(stationUid.Value, component.AlertLevelOnActivate, true, true, true, true);
 
-        var pos = nukeXform.MapPosition;
-        var x = (int) pos.X;
-        var y = (int) pos.Y;
-        var posText = $"({x}, {y})";
-
         // We are collapsing the randomness here, otherwise we would get separate random song picks for checking duration and when actually playing the song afterwards
         _selectedNukeSong = _audio.GetSound(component.ArmMusic);
 
@@ -476,6 +477,20 @@ public sealed class NukeSystem : EntitySystem
         _pointLight.SetEnabled(uid, true);
         // enable the navmap beacon for people to find it
         _navMap.SetBeaconEnabled(uid, true);
+
+        // display nuke countdown on local screens
+        if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
+        {
+            var nukeMap = nukeXform.MapUid;
+            var payload = new NetworkPayload
+            {
+                [ShuttleTimerMasks.ShuttleMap] = nukeMap,
+                [ShuttleTimerMasks.ShuttleTime] = TimeSpan.FromSeconds(component.RemainingTime),
+                [ScreenMasks.Text] = ShuttleTimerMasks.Nuke,
+                [ScreenMasks.Color] = Color.Red
+            };
+            _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
+        }
 
         _itemSlots.SetLock(uid, component.DiskSlot, true);
         if (!nukeXform.Anchored)
@@ -521,6 +536,19 @@ public sealed class NukeSystem : EntitySystem
         _pointLight.SetEnabled(uid, false);
         // disable the navmap beacon now that its disarmed
         _navMap.SetBeaconEnabled(uid, false);
+
+        // cancel the nuke countdown on local screens
+        if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
+        {
+            var nukeMap = Transform(uid).MapUid;
+            var payload = new NetworkPayload
+            {
+                [ShuttleTimerMasks.ShuttleMap] = nukeMap,
+                [ShuttleTimerMasks.ShuttleTime] = TimeSpan.Zero,
+                [ScreenMasks.Color] = TextScreenColor.TGBlue
+            };
+            _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
+        }
 
         // start bomb cooldown
         _itemSlots.SetLock(uid, component.DiskSlot, false);
@@ -638,6 +666,11 @@ public sealed class NukeSystem : EntitySystem
 public sealed class NukeExplodedEvent : EntityEventArgs
 {
     public EntityUid? OwningStation;
+}
+
+public sealed class NukeArmSuccessEvent : EntityEventArgs
+{
+
 }
 
 /// <summary>

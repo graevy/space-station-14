@@ -1,5 +1,6 @@
 using System.Numerics;
 using Robust.Client.Graphics;
+using Content.Shared.TextScreen;
 
 namespace Content.Client.TextScreen;
 
@@ -12,13 +13,10 @@ public sealed partial class TextScreenVisualsComponent : Component
     public const float PixelSize = 1f / EyeManager.PixelsPerMeter;
 
     /// <summary>
-    ///     The color of the text drawn.
+    ///     Color of text drawn.
     /// </summary>
-    /// <remarks>
-    ///     15,151,251 is the old ss13 color, from tg
-    /// </remarks>
     [DataField("color"), ViewVariables(VVAccess.ReadWrite)]
-    public Color Color = new Color(15, 151, 251);
+    public Color Color = TextScreenColor.TGBlue;
 
     /// <summary>
     ///     Offset for centering the text.

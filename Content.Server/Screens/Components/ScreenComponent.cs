@@ -11,12 +11,14 @@ public sealed partial class ScreenComponent : Component
 /// </summary>
 public sealed class ScreenMasks
 {
+    // if you're sending a timer event,
+    // and accompanying text is longer than the screen's row length, it will overlap the timer
     public static readonly string Text = Loc.GetString("screen-text");
     public static readonly string Color = Loc.GetString("screen-color");
 }
 
 /// <summary>
-///     Player-facing hashable string consts for NetworkPayload
+///     Player-facing hashable consts for NetworkPayload
 /// </summary>
 public sealed class ShuttleTimerMasks
 {
@@ -29,7 +31,12 @@ public sealed class ShuttleTimerMasks
     public static readonly string Docked = Loc.GetString("shuttle-timer-docked");
     public static readonly string ETA = Loc.GetString("shuttle-timer-eta");
     public static readonly string ETD = Loc.GetString("shuttle-timer-etd");
+    public static readonly string Nuke = Loc.GetString("shuttle-timer-nuke");
     public static readonly string Bye = Loc.GetString("shuttle-timer-bye");
     public static readonly string Kill = Loc.GetString("shuttle-timer-kill");
+
+    // grab these first from a ScreenComponent if you can
+    public static readonly uint MainFreq = 2450;
+    public static readonly uint ArrivalsFreq = 2451;
 }
 

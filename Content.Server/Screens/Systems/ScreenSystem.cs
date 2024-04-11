@@ -5,6 +5,12 @@ using Content.Server.DeviceNetwork.Systems;
 using Robust.Shared.Timing;
 
 
+// refactor TODO: the shuttle timer method needs to be broken into something to set timers and something to determine which to set
+// now that i've added the nuke countdown to the screens they have growing pains
+// the timer calls are in the arrivals and emergency shuttle systems (and now nuke system)
+// the screen messages also want priority levels -- the nuke countdown should override the shuttle timers, etc
+// (DefaultText vs ScreenText is the non-scaling version of this)
+
 namespace Content.Server.Screens.Systems;
 
 /// <summary>
