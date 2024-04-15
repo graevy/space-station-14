@@ -205,19 +205,33 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
             ftlComp.TravelTime : ShuttleSystem.DefaultTravelTime
         );
 
-        if (TryComp<DeviceNetworkComponent>(uid, out var netComp))
-        {
-            var payload = new NetworkPayload
-            {
-                [ShuttleTimerMasks.ShuttleMap] = uid,
-                [ShuttleTimerMasks.SourceMap] = args.FromMapUid,
-                [ShuttleTimerMasks.DestMap] = args.TargetCoordinates.GetMapUid(_entityManager),
-                [ShuttleTimerMasks.ShuttleTime] = ftlTime,
-                [ShuttleTimerMasks.SourceTime] = ftlTime,
-                [ShuttleTimerMasks.DestTime] = ftlTime
-            };
-            _deviceNetworkSystem.QueuePacket(uid, null, payload, netComp.TransmitFrequency);
-        }
+        if (!TryComp<DeviceNetworkComponent>(uid, out var netComp))
+            return;
+
+        // var updates = new Dictionary<EntityUid, ScreenUpdate>
+        // {
+        //     { uid, new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime) },
+        // };
+        // if (args.FromMapUid != null)
+        //     updates[args.FromMapUid.Value] = new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        // var target = args.TargetCoordinates.GetMapUid(_entityManager);
+        // if (target != null)
+        //     updates[target.Value] = new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+
+        var sourceMap = args.FromMapUid;
+        var destMap = args.TargetCoordinates.GetMapUid(_entityManager);
+
+        var shuttleUpdate = new ScreenUpdate(uid, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        var sourceUpdate = new ScreenUpdate(sourceMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        var destUpdate = new ScreenUpdate(destMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+
+        var shuttlePayload = new NetworkPayload { [ScreenMasks.Update] = shuttleUpdate };
+        var sourcePayload = new NetworkPayload { [ScreenMasks.Update] = sourceUpdate };
+        var destPayload = new NetworkPayload { [ScreenMasks.Update] = destUpdate };
+
+        _deviceNetworkSystem.QueuePacket(uid, null, shuttlePayload, netComp.TransmitFrequency);
+        _deviceNetworkSystem.QueuePacket(uid, null, sourcePayload, netComp.TransmitFrequency);
+        _deviceNetworkSystem.QueuePacket(uid, null, destPayload, netComp.TransmitFrequency);
     }
 
     /// <summary>
@@ -231,23 +245,23 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         {
             var payload = new NetworkPayload
             {
-                [ShuttleTimerMasks.ShuttleMap] = shuttle,
-                [ShuttleTimerMasks.SourceMap] = _roundEnd.GetCentcomm(),
-                [ShuttleTimerMasks.DestMap] = _roundEnd.GetStation(),
-                [ShuttleTimerMasks.ShuttleTime] = countdownTime,
-                [ShuttleTimerMasks.SourceTime] = countdownTime,
-                [ShuttleTimerMasks.DestTime] = countdownTime,
+                [ScreenMasks.ShuttleMap] = shuttle,
+                [ScreenMasks.SourceMap] = _roundEnd.GetCentcomm(),
+                [ScreenMasks.DestMap] = _roundEnd.GetStation(),
+                [ScreenMasks.ShuttleTime] = countdownTime,
+                [ScreenMasks.SourceTime] = countdownTime,
+                [ScreenMasks.DestTime] = countdownTime,
             };
 
             // by popular request
             // https://discord.com/channels/310555209753690112/770682801607278632/1189989482234126356
             if (_random.Next(1000) == 0)
             {
-                payload.Add(ScreenMasks.Text, ShuttleTimerMasks.Kill);
+                payload.Add(ScreenMasks.Text, ScreenMasks.Kill);
                 payload.Add(ScreenMasks.Color, Color.Red);
             }
             else
-                payload.Add(ScreenMasks.Text, ShuttleTimerMasks.Bye);
+                payload.Add(ScreenMasks.Text, ScreenMasks.Bye);
 
             _deviceNetworkSystem.QueuePacket(shuttle, null, payload, net.TransmitFrequency);
         }
@@ -287,19 +301,19 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
                 _chatSystem.DispatchStationAnnouncement(stationUid, Loc.GetString("emergency-shuttle-docked", ("time", $"{_consoleAccumulator:0}"), ("direction", angle.GetDir())), playDefaultSound: false);
             }
 
-            // shuttle timers
+            // send timer updates to stations
             var time = TimeSpan.FromSeconds(_consoleAccumulator);
             if (TryComp<DeviceNetworkComponent>(stationShuttle.EmergencyShuttle.Value, out var netComp))
             {
                 var payload = new NetworkPayload
                 {
-                    [ShuttleTimerMasks.ShuttleMap] = stationShuttle.EmergencyShuttle.Value,
-                    [ShuttleTimerMasks.SourceMap] = targetXform?.MapUid,
-                    [ShuttleTimerMasks.DestMap] = _roundEnd.GetCentcomm(),
-                    [ShuttleTimerMasks.ShuttleTime] = time,
-                    [ShuttleTimerMasks.SourceTime] = time,
-                    [ShuttleTimerMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
-                    [ShuttleTimerMasks.Docked] = true
+                    [ScreenMasks.ShuttleMap] = stationShuttle.EmergencyShuttle.Value,
+                    [ScreenMasks.SourceMap] = targetXform?.MapUid,
+                    [ScreenMasks.DestMap] = _roundEnd.GetCentcomm(),
+                    [ScreenMasks.ShuttleTime] = time,
+                    [ScreenMasks.SourceTime] = time,
+                    [ScreenMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
+                    [ScreenMasks.Docked] = true
                 };
                 _deviceNetworkSystem.QueuePacket(stationShuttle.EmergencyShuttle.Value, null, payload, netComp.TransmitFrequency);
             }

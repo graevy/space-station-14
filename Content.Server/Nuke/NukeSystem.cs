@@ -477,6 +477,20 @@ public sealed class NukeSystem : EntitySystem
         // enable the navmap beacon for people to find it
         _navMap.SetBeaconEnabled(uid, true);
 
+        // display nuke countdown on local screens
+        if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
+        {
+            var nukeMap = nukeXform.MapUid;
+            var payload = new NetworkPayload
+            {
+                [ScreenMasks.ShuttleMap] = nukeMap,
+                [ScreenMasks.ShuttleTime] = TimeSpan.FromSeconds(component.RemainingTime),
+                [ScreenMasks.Text] = ScreenMasks.Nuke,
+                [ScreenMasks.Color] = Color.Red
+            };
+            _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
+        }
+
         _itemSlots.SetLock(uid, component.DiskSlot, true);
         if (!nukeXform.Anchored)
         {
@@ -521,6 +535,19 @@ public sealed class NukeSystem : EntitySystem
         _pointLight.SetEnabled(uid, false);
         // disable the navmap beacon now that its disarmed
         _navMap.SetBeaconEnabled(uid, false);
+
+        // cancel the nuke countdown on local screens
+        if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
+        {
+            var nukeMap = Transform(uid).MapUid;
+            var payload = new NetworkPayload
+            {
+                [ScreenMasks.ShuttleMap] = nukeMap,
+                [ScreenMasks.ShuttleTime] = TimeSpan.Zero,
+                [ScreenMasks.Color] = TextScreenColor.TGBlue
+            };
+            _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
+        }
 
         // start bomb cooldown
         _itemSlots.SetLock(uid, component.DiskSlot, false);

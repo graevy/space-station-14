@@ -191,8 +191,8 @@ public sealed class ArrivalsSystem : EntitySystem
 
             var payload = new NetworkPayload
             {
-                [ShuttleTimerMasks.ShuttleMap] = shuttleUid,
-                [ShuttleTimerMasks.ShuttleTime] = ftlTime
+                [ScreenMasks.ShuttleMap] = shuttleUid,
+                [ScreenMasks.ShuttleTime] = ftlTime
             };
 
             // unfortunate levels of spaghetti due to roundstart arrivals ftl behavior
@@ -205,14 +205,14 @@ public sealed class ArrivalsSystem : EntitySystem
                 sourceMap = station == null ? null : Transform(station.Value)?.MapUid;
                 arrivalsDelay += RoundStartFTLDuration;
                 component.FirstRun = false;
-                payload.Add(ShuttleTimerMasks.DestMap, Transform(args.TargetCoordinates.EntityId).MapUid);
-                payload.Add(ShuttleTimerMasks.DestTime, ftlTime);
+                payload.Add(ScreenMasks.DestMap, Transform(args.TargetCoordinates.EntityId).MapUid);
+                payload.Add(ScreenMasks.DestTime, ftlTime);
             }
             else
                 sourceMap = args.FromMapUid;
 
-            payload.Add(ShuttleTimerMasks.SourceMap, sourceMap);
-            payload.Add(ShuttleTimerMasks.SourceTime, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
+            payload.Add(ScreenMasks.SourceMap, sourceMap);
+            payload.Add(ScreenMasks.SourceTime, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
 
             _deviceNetworkSystem.QueuePacket(shuttleUid, null, payload, netComp.TransmitFrequency);
         }
@@ -259,11 +259,11 @@ public sealed class ArrivalsSystem : EntitySystem
         {
             var payload = new NetworkPayload
             {
-                [ShuttleTimerMasks.ShuttleMap] = uid,
-                [ShuttleTimerMasks.ShuttleTime] = dockTime,
-                [ShuttleTimerMasks.SourceMap] = args.MapUid,
-                [ShuttleTimerMasks.SourceTime] = dockTime,
-                [ShuttleTimerMasks.Docked] = true
+                [ScreenMasks.ShuttleMap] = uid,
+                [ScreenMasks.ShuttleTime] = dockTime,
+                [ScreenMasks.SourceMap] = args.MapUid,
+                [ScreenMasks.SourceTime] = dockTime,
+                [ScreenMasks.Docked] = true
             };
             _deviceNetworkSystem.QueuePacket(uid, null, payload, netComp.TransmitFrequency);
         }

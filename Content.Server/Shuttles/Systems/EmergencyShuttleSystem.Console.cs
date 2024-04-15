@@ -380,13 +380,13 @@ public sealed partial class EmergencyShuttleSystem
         {
             var payload = new NetworkPayload
             {
-                [ShuttleTimerMasks.ShuttleMap] = shuttle,
-                [ShuttleTimerMasks.SourceMap] = _roundEnd.GetStation(),
-                [ShuttleTimerMasks.DestMap] = _roundEnd.GetCentcomm(),
-                [ShuttleTimerMasks.ShuttleTime] = time,
-                [ShuttleTimerMasks.SourceTime] = time,
-                [ShuttleTimerMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
-                [ShuttleTimerMasks.Docked] = true
+                [ScreenMasks.ShuttleMap] = shuttle,
+                [ScreenMasks.SourceMap] = _roundEnd.GetStation(),
+                [ScreenMasks.DestMap] = _roundEnd.GetCentcomm(),
+                [ScreenMasks.ShuttleTime] = time,
+                [ScreenMasks.SourceTime] = time,
+                [ScreenMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
+                [ScreenMasks.Docked] = true
             };
             _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
         }
