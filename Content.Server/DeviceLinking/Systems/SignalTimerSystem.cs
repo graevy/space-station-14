@@ -3,7 +3,7 @@ using Content.Server.DeviceLinking.Events;
 using Content.Shared.UserInterface;
 using Content.Shared.Access.Systems;
 using Content.Shared.MachineLinking;
-using Content.Shared.TextScreen;
+using Content.Shared.Screen;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Timing;
@@ -39,8 +39,8 @@ public sealed class SignalTimerSystem : EntitySystem
 
     private void OnInit(EntityUid uid, SignalTimerComponent component, ComponentInit args)
     {
-        _appearanceSystem.SetData(uid, TextScreenVisuals.DefaultText, component.Label);
-        _appearanceSystem.SetData(uid, TextScreenVisuals.ScreenText, component.Label);
+        _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
+        _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
         _signalSystem.EnsureSinkPorts(uid, component.Trigger);
     }
 
@@ -141,8 +141,8 @@ public sealed class SignalTimerSystem : EntitySystem
         {
             // could maybe move the defaulttext update out of this block,
             // if you delved deep into appearance update batching
-            _appearanceSystem.SetData(uid, TextScreenVisuals.DefaultText, component.Label);
-            _appearanceSystem.SetData(uid, TextScreenVisuals.ScreenText, component.Label);
+            _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
+            _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
         }
     }
 
@@ -156,12 +156,12 @@ public sealed class SignalTimerSystem : EntitySystem
             return;
 
         component.Delay = args.Delay.TotalSeconds;
-        _appearanceSystem.SetData(uid, TextScreenVisuals.TargetTime, component.Delay);
+        _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, component.Delay);
     }
 
     /// <summary>
     ///     Called by <see cref="SignalTimerStartMessage"/> to instantiate an <see cref="ActiveSignalTimerComponent"/>,
-    ///     clear <see cref="TextScreenVisuals.ScreenText"/>, propagate those changes, and invoke the start port.
+    ///     clear <see cref="ScreenVisuals.ScreenText"/>, propagate those changes, and invoke the start port.
     /// </summary>
     private void OnTimerStartMessage(EntityUid uid, SignalTimerComponent component, SignalTimerStartMessage args)
     {
@@ -171,7 +171,7 @@ public sealed class SignalTimerSystem : EntitySystem
         // feedback received: pressing the timer button while a timer is running should cancel the timer.
         if (HasComp<ActiveSignalTimerComponent>(uid))
         {
-            _appearanceSystem.SetData(uid, TextScreenVisuals.TargetTime, _gameTiming.CurTime);
+            _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, _gameTiming.CurTime);
             Trigger(uid, component);
         }
         else
@@ -194,8 +194,8 @@ public sealed class SignalTimerSystem : EntitySystem
 
         if (appearance != null)
         {
-            _appearanceSystem.SetData(uid, TextScreenVisuals.TargetTime, timer.TriggerTime, appearance);
-            _appearanceSystem.SetData(uid, TextScreenVisuals.ScreenText, string.Empty, appearance);
+            _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, timer.TriggerTime, appearance);
+            _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, string.Empty, appearance);
         }
 
         _signalSystem.InvokePort(uid, component.StartPort);

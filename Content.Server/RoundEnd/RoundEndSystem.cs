@@ -198,12 +198,12 @@ namespace Content.Server.RoundEnd
             {
                 var payload = new NetworkPayload
                 {
-                    [ShuttleTimerMasks.ShuttleMap] = shuttle,
-                    [ShuttleTimerMasks.SourceMap] = GetCentcomm(),
-                    [ShuttleTimerMasks.DestMap] = GetStation(),
-                    [ShuttleTimerMasks.ShuttleTime] = countdownTime,
-                    [ShuttleTimerMasks.SourceTime] = countdownTime + TimeSpan.FromSeconds(_shuttle.TransitTime + _cfg.GetCVar(CCVars.EmergencyShuttleDockTime)),
-                    [ShuttleTimerMasks.DestTime] = countdownTime,
+                    [ScreenMasks.ShuttleMap] = shuttle,
+                    [ScreenMasks.SourceMap] = GetCentcomm(),
+                    [ScreenMasks.DestMap] = GetStation(),
+                    [ScreenMasks.ShuttleTime] = countdownTime,
+                    [ScreenMasks.SourceTime] = countdownTime + TimeSpan.FromSeconds(_shuttle.TransitTime + _cfg.GetCVar(CCVars.EmergencyShuttleDockTime)),
+                    [ScreenMasks.DestTime] = countdownTime,
                 };
                 _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
             }
@@ -244,12 +244,12 @@ namespace Content.Server.RoundEnd
             {
                 var payload = new NetworkPayload
                 {
-                    [ShuttleTimerMasks.ShuttleMap] = shuttle,
-                    [ShuttleTimerMasks.SourceMap] = GetCentcomm(),
-                    [ShuttleTimerMasks.DestMap] = GetStation(),
-                    [ShuttleTimerMasks.ShuttleTime] = zero,
-                    [ShuttleTimerMasks.SourceTime] = zero,
-                    [ShuttleTimerMasks.DestTime] = zero,
+                    [ScreenMasks.ShuttleMap] = shuttle,
+                    [ScreenMasks.SourceMap] = GetCentcomm(),
+                    [ScreenMasks.DestMap] = GetStation(),
+                    [ScreenMasks.ShuttleTime] = zero,
+                    [ScreenMasks.SourceTime] = zero,
+                    [ScreenMasks.DestTime] = zero,
                 };
                 _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
             }

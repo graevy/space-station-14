@@ -13,6 +13,7 @@ using Content.Shared.Popups;
 using Content.Shared.Shuttles.BUIStates;
 using Content.Shared.Shuttles.Events;
 using Content.Shared.Shuttles.Systems;
+using Content.Shared.Screen;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Timer = Robust.Shared.Timing.Timer;
@@ -378,15 +379,19 @@ public sealed partial class EmergencyShuttleSystem
         var shuttle = GetShuttle();
         if (shuttle != null && TryComp<DeviceNetworkComponent>(shuttle, out var net))
         {
+            var shuttleUpdate = new ScreenUpdate(shuttle, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
+            var sourceUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
+            var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
             var payload = new NetworkPayload
             {
-                [ShuttleTimerMasks.ShuttleMap] = shuttle,
-                [ShuttleTimerMasks.SourceMap] = _roundEnd.GetStation(),
-                [ShuttleTimerMasks.DestMap] = _roundEnd.GetCentcomm(),
-                [ShuttleTimerMasks.ShuttleTime] = time,
-                [ShuttleTimerMasks.SourceTime] = time,
-                [ShuttleTimerMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
-                [ShuttleTimerMasks.Docked] = true
+                [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate }
+                // [ScreenMasks.ShuttleMap] = shuttle,
+                // [ScreenMasks.SourceMap] = _roundEnd.GetStation(),
+                // [ScreenMasks.DestMap] = _roundEnd.GetCentcomm(),
+                // [ScreenMasks.ShuttleTime] = time,
+                // [ScreenMasks.SourceTime] = time,
+                // [ScreenMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
+                // [ScreenMasks.Docked] = true
             };
             _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
         }

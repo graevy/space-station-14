@@ -1,10 +1,12 @@
+using Content.Shared.Screen;
 using System.Numerics;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 
-namespace Content.Client.TextScreen;
+namespace Content.Client.Screen;
 
 [RegisterComponent]
-public sealed partial class TextScreenVisualsComponent : Component
+public sealed partial class ScreenVisualsComponent : Component
 {
     /// <summary>
     ///     1/32 - the size of a pixel
@@ -51,7 +53,7 @@ public sealed partial class TextScreenVisualsComponent : Component
     public int RowLength = 5;
 
     /// <summary>
-    ///     Text the screen should show when it finishes a timer.
+    ///     Text the screen should show.
     /// </summary>
     [DataField("text"), ViewVariables(VVAccess.ReadWrite)]
     public string?[] Text = new string?[2];
@@ -59,7 +61,7 @@ public sealed partial class TextScreenVisualsComponent : Component
     /// <summary>
     ///     Text the screen will draw whenever appearance is updated.
     /// </summary>
-    public string?[] TextToDraw = new string?[2];
+    // public string?[] TextToDraw = new string?[2];
 
     /// <summary>
     ///     Per-character layers, for mapping into the sprite component.
@@ -73,4 +75,8 @@ public sealed partial class TextScreenVisualsComponent : Component
     public string MinuteFormat = "D2";
     [DataField("secondFormat")]
     public string SecondFormat = "D2";
+
+    public ScreenUpdate? ActiveUpdate;
+    public SortedDictionary<int, ScreenUpdate> Updates = new();
+    public int MaxUpdates = 8;
 }

@@ -21,6 +21,7 @@ using Content.Shared.CCVar;
 using Content.Shared.Database;
 using Content.Shared.DeviceNetwork;
 using Content.Shared.GameTicking;
+using Content.Shared.Screen;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Shuttles.Events;
 using Content.Shared.Tag;
@@ -205,23 +206,39 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
             ftlComp.TravelTime : ShuttleSystem.DefaultTravelTime
         );
 
-        if (TryComp<DeviceNetworkComponent>(uid, out var netComp))
-        {
-            var payload = new NetworkPayload
-            {
-                [ShuttleTimerMasks.ShuttleMap] = uid,
-                [ShuttleTimerMasks.SourceMap] = args.FromMapUid,
-                [ShuttleTimerMasks.DestMap] = args.TargetCoordinates.GetMapUid(_entityManager),
-                [ShuttleTimerMasks.ShuttleTime] = ftlTime,
-                [ShuttleTimerMasks.SourceTime] = ftlTime,
-                [ShuttleTimerMasks.DestTime] = ftlTime
-            };
-            _deviceNetworkSystem.QueuePacket(uid, null, payload, netComp.TransmitFrequency);
-        }
+        if (!TryComp<DeviceNetworkComponent>(uid, out var netComp))
+            return;
+
+        // var updates = new Dictionary<EntityUid, ScreenUpdate>
+        // {
+        //     { uid, new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime) },
+        // };
+        // if (args.FromMapUid != null)
+        //     updates[args.FromMapUid.Value] = new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        // var target = args.TargetCoordinates.GetMapUid(_entityManager);
+        // if (target != null)
+        //     updates[target.Value] = new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+
+        var sourceMap = args.FromMapUid;
+        var destMap = args.TargetCoordinates.GetMapUid(_entityManager);
+
+        var shuttleUpdate = new ScreenUpdate(uid, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        var sourceUpdate = new ScreenUpdate(sourceMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        var destUpdate = new ScreenUpdate(destMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+
+        var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
+
+        // var shuttlePayload = new NetworkPayload { [ScreenMasks.Update] = shuttleUpdate };
+        // var sourcePayload = new NetworkPayload { [ScreenMasks.Update] = sourceUpdate };
+        // var destPayload = new NetworkPayload { [ScreenMasks.Update] = destUpdate };
+
+        // _deviceNetworkSystem.QueuePacket(uid, null, shuttlePayload, netComp.TransmitFrequency);
+        // _deviceNetworkSystem.QueuePacket(uid, null, sourcePayload, netComp.TransmitFrequency);
+        _deviceNetworkSystem.QueuePacket(uid, null, payload, netComp.TransmitFrequency);
     }
 
     /// <summary>
-    ///     When the escape shuttle finishes FTL (docks at centcomm), have the timers display the round end countdown
+    ///     When the escape shuttle finishes FTL (docks at centcomm), have screens display the round end countdown
     /// </summary>
     private void OnEmergencyFTLComplete(EntityUid uid, EmergencyShuttleComponent component, ref FTLCompletedEvent args)
     {
@@ -229,25 +246,14 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         var shuttle = args.Entity;
         if (TryComp<DeviceNetworkComponent>(shuttle, out var net))
         {
-            var payload = new NetworkPayload
-            {
-                [ShuttleTimerMasks.ShuttleMap] = shuttle,
-                [ShuttleTimerMasks.SourceMap] = _roundEnd.GetCentcomm(),
-                [ShuttleTimerMasks.DestMap] = _roundEnd.GetStation(),
-                [ShuttleTimerMasks.ShuttleTime] = countdownTime,
-                [ShuttleTimerMasks.SourceTime] = countdownTime,
-                [ShuttleTimerMasks.DestTime] = countdownTime,
-            };
-
             // by popular request
             // https://discord.com/channels/310555209753690112/770682801607278632/1189989482234126356
-            if (_random.Next(1000) == 0)
-            {
-                payload.Add(ScreenMasks.Text, ShuttleTimerMasks.Kill);
-                payload.Add(ScreenMasks.Color, Color.Red);
-            }
-            else
-                payload.Add(ScreenMasks.Text, ShuttleTimerMasks.Bye);
+            var countdownText = _random.Next(1000) > 0 ? ScreenMasks.Bye : ScreenMasks.Kill;
+            var shuttleUpdate = new ScreenUpdate(args.Entity, ScreenMasks.ShuttlePriority, countdownText, countdownTime);
+            var sourceUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, countdownText, countdownTime);
+            var destUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenMasks.ShuttlePriority, countdownText, countdownTime);
+
+            var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
 
             _deviceNetworkSystem.QueuePacket(shuttle, null, payload, net.TransmitFrequency);
         }
@@ -287,19 +293,23 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
                 _chatSystem.DispatchStationAnnouncement(stationUid, Loc.GetString("emergency-shuttle-docked", ("time", $"{_consoleAccumulator:0}"), ("direction", angle.GetDir())), playDefaultSound: false);
             }
 
-            // shuttle timers
+            // send timer updates to stations
             var time = TimeSpan.FromSeconds(_consoleAccumulator);
             if (TryComp<DeviceNetworkComponent>(stationShuttle.EmergencyShuttle.Value, out var netComp))
             {
+                var shuttleUpdate = new ScreenUpdate(stationShuttle.EmergencyShuttle.Value, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
+                var sourceUpdate = new ScreenUpdate(targetXform?.MapUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
+                var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
                 var payload = new NetworkPayload
                 {
-                    [ShuttleTimerMasks.ShuttleMap] = stationShuttle.EmergencyShuttle.Value,
-                    [ShuttleTimerMasks.SourceMap] = targetXform?.MapUid,
-                    [ShuttleTimerMasks.DestMap] = _roundEnd.GetCentcomm(),
-                    [ShuttleTimerMasks.ShuttleTime] = time,
-                    [ShuttleTimerMasks.SourceTime] = time,
-                    [ShuttleTimerMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
-                    [ShuttleTimerMasks.Docked] = true
+                    [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate }
+                    // [ScreenMasks.ShuttleMap] = stationShuttle.EmergencyShuttle.Value,
+                    // [ScreenMasks.SourceMap] = targetXform?.MapUid,
+                    // [ScreenMasks.DestMap] = _roundEnd.GetCentcomm(),
+                    // [ScreenMasks.ShuttleTime] = time,
+                    // [ScreenMasks.SourceTime] = time,
+                    // [ScreenMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
+                    // [ScreenMasks.Docked] = true
                 };
                 _deviceNetworkSystem.QueuePacket(stationShuttle.EmergencyShuttle.Value, null, payload, netComp.TransmitFrequency);
             }
