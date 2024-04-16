@@ -1,6 +1,6 @@
 using Robust.Shared.Serialization;
 
-namespace Content.Shared.TextScreen;
+namespace Content.Shared.Screen;
 
 [Serializable, NetSerializable]
 public enum TextScreenVisuals : byte
@@ -28,4 +28,18 @@ public enum TextScreenVisuals : byte
     ///     Expects a <see cref="Color"/>.
     /// </summary>
     Color
+}
+
+public struct ScreenUpdate
+{
+    public EntityUid? Subnet { get; }
+    public int Priority { get; }
+    public string? Text { get; }
+    public TimeSpan? Timer { get; }
+    public Color? Color { get; }
+
+    public ScreenUpdate(EntityUid? subnet, int priority, string? text = null, TimeSpan? timer = null, Color? color = null)
+    {
+        Subnet = subnet; Priority = priority; Text = text; Timer = timer; Color = color;
+    }
 }

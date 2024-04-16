@@ -1,8 +1,9 @@
-using Content.Shared.TextScreen;
+using Content.Shared.Screen;
 using Content.Server.Screens.Components;
 using Content.Server.DeviceNetwork.Components;
 using Content.Server.DeviceNetwork.Systems;
 using Robust.Shared.Timing;
+using Content.Shared.Screen.Systems;
 
 
 namespace Content.Server.Screens.Systems;
@@ -14,6 +15,7 @@ public sealed class ScreenSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private readonly SharedScreenSystem _ScreenSystem = default!;
 
     public override void Initialize()
     {
@@ -31,9 +33,7 @@ public sealed class ScreenSystem : EntitySystem
     /// </summary>
     private void OnPacketReceived(EntityUid uid, ScreenComponent component, DeviceNetworkPacketEvent args)
     {
-        args.Data.TryGetValue(ScreenMasks.Update, out var update);
-        if (update == null)
-            return;
+        args.Data.TryGetValue(ScreenMasks.Update, out ScreenUpdate update);
 
         // drop the packet if it's intended for a subnet (MapUid) that doesn't match our screen's
         var timerXform = Transform(uid);
@@ -66,7 +66,8 @@ public sealed class ScreenSystem : EntitySystem
         //     && target > _gameTiming.CurTime)
         //     return;
 
-        if (args.Data.TryGetValue(ScreenMasks.Text, out string? text) && text != null)
+        var text = update.Text;
+        if (text != null)
         {
             _appearanceSystem.SetData(uid, TextScreenVisuals.DefaultText, text);
             _appearanceSystem.SetData(uid, TextScreenVisuals.ScreenText, text);
@@ -75,9 +76,8 @@ public sealed class ScreenSystem : EntitySystem
 
     private void ScreenTimer(EntityUid uid, ScreenComponent component, ScreenUpdate update)
     {
-        if (!update.TryGetValue(map, out TimeSpan time))
-            return;
-
-        _appearanceSystem.SetData(uid, TextScreenVisuals.TargetTime, _gameTiming.CurTime + duration);
+        var timer = update.Timer;
+        if (timer != null)
+            _appearanceSystem.SetData(uid, TextScreenVisuals.TargetTime, _gameTiming.CurTime + timer.Value);
     }
 }
