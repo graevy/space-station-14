@@ -47,7 +47,7 @@ public sealed class ScreenSystem : EntitySystem
         if (update.Timer != null)
             ScreenTimer(uid, component, update);
         if (update.Color != null)
-            _appearanceSystem.SetData(uid, TextScreenVisuals.Color, update.Color.Value);
+            _appearanceSystem.SetData(uid, ScreenVisuals.Color, update.Color.Value);
     }
 
     private void QueueUpdate()
@@ -62,15 +62,15 @@ public sealed class ScreenSystem : EntitySystem
     {
         // don't allow text updates if there's an active timer
         // (and just check here so the server doesn't have to track them)
-        // if (_appearanceSystem.TryGetData(uid, TextScreenVisuals.TargetTime, out TimeSpan target)
+        // if (_appearanceSystem.TryGetData(uid, ScreenVisuals.TargetTime, out TimeSpan target)
         //     && target > _gameTiming.CurTime)
         //     return;
 
         var text = update.Text;
         if (text != null)
         {
-            _appearanceSystem.SetData(uid, TextScreenVisuals.DefaultText, text);
-            _appearanceSystem.SetData(uid, TextScreenVisuals.ScreenText, text);
+            _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, text);
+            _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, text);
         }
     }
 
@@ -78,6 +78,6 @@ public sealed class ScreenSystem : EntitySystem
     {
         var timer = update.Timer;
         if (timer != null)
-            _appearanceSystem.SetData(uid, TextScreenVisuals.TargetTime, _gameTiming.CurTime + timer.Value);
+            _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, _gameTiming.CurTime + timer.Value);
     }
 }

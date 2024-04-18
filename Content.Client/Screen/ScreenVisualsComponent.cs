@@ -60,7 +60,7 @@ public sealed partial class ScreenVisualsComponent : Component
     /// <summary>
     ///     Text the screen will draw whenever appearance is updated.
     /// </summary>
-    public string?[] TextToDraw = new string?[2];
+    // public string?[] TextToDraw = new string?[2];
 
     /// <summary>
     ///     Per-character layers, for mapping into the sprite component.

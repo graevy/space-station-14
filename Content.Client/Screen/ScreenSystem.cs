@@ -106,40 +106,62 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenVisualsComponent>
     /// </remarks>
     protected override void OnAppearanceChange(EntityUid uid, ScreenVisualsComponent component, ref AppearanceChangeEvent args)
     {
-        if (!Resolve(uid, ref args.Sprite))
+        if (!Resolve(uid, ref args.Sprite) || !args.AppearanceData.TryGetValue(ScreenVisuals.Update, out var x) || x is not ScreenUpdate update)
             return;
 
-        if (args.AppearanceData.TryGetValue(TextScreenVisuals.Color, out var color) && color is Color)
-            component.Color = (Color) color;
+        component.Updates.Add(update);
+        RecheckUpdates(uid, component);
 
-        // DefaultText: fallback text e.g. broadcast updates from comms consoles
-        if (args.AppearanceData.TryGetValue(TextScreenVisuals.DefaultText, out var newDefault) && newDefault is string)
-            component.Text = SegmentText((string) newDefault, component);
 
-        // ScreenText: currently rendered text e.g. the "ETA" accompanying shuttle timers
-        if (args.AppearanceData.TryGetValue(TextScreenVisuals.ScreenText, out var text) && text is string)
-        {
-            component.TextToDraw = SegmentText((string) text, component);
-            ResetText(uid, component);
-            BuildTextLayers(uid, component, args.Sprite);
-            DrawLayers(uid, component.LayerStatesToDraw);
-        }
+        // var color = update.Color;
+        // var text = update.Text;
+        // var timer = update.Timer;
 
-        if (args.AppearanceData.TryGetValue(TextScreenVisuals.TargetTime, out var time) && time is TimeSpan)
-        {
-            var target = (TimeSpan) time;
-            if (target > _gameTiming.CurTime)
-            {
-                var timer = EnsureComp<ScreenTimerComponent>(uid);
-                timer.Target = target;
-                BuildTimerLayers(uid, timer, component);
-                DrawLayers(uid, timer.LayerStatesToDraw);
-            }
-            else
-            {
-                OnTimerFinish(uid, component);
-            }
-        }
+        // if (color != null && color is Color)
+        //     component.Color = (Color) color;
+
+        // // DefaultText: fallback text e.g. broadcast updates from comms consoles
+        // if (args.AppearanceData.TryGetValue(ScreenVisuals.DefaultText, out var newDefault) && newDefault is string)
+        //     component.Text = SegmentText((string) newDefault, component);
+
+        // // ScreenText: currently rendered text e.g. the "ETA" accompanying shuttle timers
+        // if (args.AppearanceData.TryGetValue(ScreenVisuals.ScreenText, out var text) && text is string)
+        // {
+        //     component.TextToDraw = SegmentText((string) text, component);
+        //     ResetText(uid, component);
+        //     BuildTextLayers(uid, component, args.Sprite);
+        //     DrawLayers(uid, component.LayerStatesToDraw);
+        // }
+
+        // if (args.AppearanceData.TryGetValue(ScreenVisuals.TargetTime, out var time) && time is TimeSpan)
+        // {
+        //     var target = (TimeSpan) time;
+        //     if (target > _gameTiming.CurTime)
+        //     {
+        //         var timer = EnsureComp<ScreenTimerComponent>(uid);
+        //         timer.Target = target;
+        //         BuildTimerLayers(uid, timer, component);
+        //         DrawLayers(uid, timer.LayerStatesToDraw);
+        //     }
+        //     else
+        //     {
+        //         OnTimerFinish(uid, component);
+        //     }
+        // }
+    }
+
+    private void RecheckUpdates(EntityUid uid, ScreenVisualsComponent component)
+    {
+        ScreenUpdate first = component.Updates.First();
+        if (first == component.ActiveUpdate || first.Timer < _gameTiming.CurTime)
+            return;
+
+        component.ActiveUpdate = first;
+        var color = first.Color;
+        var text = first.Text;
+        var timer = first.Timer;
+
+
     }
 
     /// <summary>
@@ -148,7 +170,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenVisualsComponent>
     /// </summary>
     private void OnTimerFinish(EntityUid uid, ScreenVisualsComponent screen)
     {
-        screen.TextToDraw = screen.Text;
+        // screen.TextToDraw = screen.Text;
 
         if (!TryComp<ScreenTimerComponent>(uid, out var timer) || !TryComp<SpriteComponent>(uid, out var sprite))
             return;

@@ -20,7 +20,7 @@ public abstract class ScreenComparer : IComparer<ScreenUpdate>
 [RegisterComponent]
 public sealed partial class ScreenComponent : Component
 {
-
+    public static readonly uint MaxUpdates = 16;
 }
 
 /// <summary>
