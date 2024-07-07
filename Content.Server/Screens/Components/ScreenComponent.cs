@@ -1,6 +1,23 @@
+// using System.Collections.Generic;
+
 using Content.Shared.Screen;
 
 namespace Content.Server.Screens.Components;
+
+public abstract class ScreenComparer : IComparer<ScreenUpdate>
+{
+    public ScreenComparer()
+    {
+
+    }
+    public int Compare(ScreenUpdate a, ScreenUpdate b)
+    {
+        if (a.Priority >= b.Priority)
+            return 0;
+        else
+            return 1;
+    }
+}
 
 public abstract class ScreenComparer : IComparer<ScreenUpdate>
 {
@@ -22,6 +39,23 @@ public abstract class ScreenComparer : IComparer<ScreenUpdate>
 public sealed partial class ScreenComponent : Component
 {
     public static readonly uint MaxUpdates = 16;
+    public ScreenUpdate? ActiveUpdate;
+    public SortedSet<ScreenUpdate> Updates;
+
+}
+
+public struct ScreenUpdate
+{
+    public EntityUid? Subnet { get; }
+    public int Priority { get; }
+    public string? Text { get; }
+    public TimeSpan? Timer { get; }
+    public Color? Color { get; }
+
+    public ScreenUpdate(EntityUid? subnet, int priority, string? text = null, TimeSpan? timer = null, Color? color = null)
+    {
+        Subnet = subnet; Priority = priority; Text = text; Timer = timer; Color = color;
+    }
 }
 
 /// <summary>

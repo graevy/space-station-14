@@ -4,7 +4,6 @@ using Content.Server.DeviceNetwork.Components;
 using Content.Server.DeviceNetwork.Systems;
 using Content.Shared.DeviceNetwork;
 using Robust.Shared.Timing;
-using Content.Shared.Screen.Systems;
 
 
 namespace Content.Server.Screens.Systems;
@@ -17,7 +16,6 @@ public sealed class ScreenSystem : EntitySystem
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
     [Dependency] private readonly DeviceNetworkSystem _network = default!;
-    [Dependency] private readonly SharedScreenSystem _screenSystem = default!;
 
     public override void Initialize()
     {
