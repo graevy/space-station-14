@@ -1,9 +1,12 @@
 using Content.Server.AlertLevel;
 using Content.Server.Audio;
 using Content.Server.Chat.Systems;
+using Content.Server.DeviceNetwork.Components;
+using Content.Server.DeviceNetwork.Systems;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
+using Content.Server.Screens;
 using Content.Server.Station.Systems;
 using Content.Shared.Audio;
 using Content.Shared.Containers.ItemSlots;
@@ -13,6 +16,7 @@ using Content.Shared.Examine;
 using Content.Shared.Maps;
 using Content.Shared.Nuke;
 using Content.Shared.Popups;
+using Content.Shared.Screen;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -29,6 +33,7 @@ public sealed class NukeSystem : EntitySystem
 {
     [Dependency] private readonly AlertLevelSystem _alertLevel = default!;
     [Dependency] private readonly ChatSystem _chatSystem = default!;
+    [Dependency] private readonly DeviceNetworkSystem _network = default!;
     [Dependency] private readonly ExplosionSystem _explosions = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
@@ -476,14 +481,8 @@ public sealed class NukeSystem : EntitySystem
         // display nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var nukeMap = nukeXform.MapUid;
-            var payload = new NetworkPayload
-            {
-                [ScreenMasks.ShuttleMap] = nukeMap,
-                [ScreenMasks.ShuttleTime] = TimeSpan.FromSeconds(component.RemainingTime),
-                [ScreenMasks.Text] = ScreenMasks.Nuke,
-                [ScreenMasks.Color] = Color.Red
-            };
+            var update = new ScreenUpdate(nukeXform.MapUid, ScreenMasks.NukePriority, Screenmasks.Nuke, TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
+            var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
             _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }
 
@@ -535,13 +534,8 @@ public sealed class NukeSystem : EntitySystem
         // cancel the nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var nukeMap = Transform(uid).MapUid;
-            var payload = new NetworkPayload
-            {
-                [ScreenMasks.ShuttleMap] = nukeMap,
-                [ScreenMasks.ShuttleTime] = TimeSpan.Zero,
-                [ScreenMasks.Color] = TextScreenColor.TGBlue
-            };
+            var update = new ScreenUpdate(Transform(uid).MapUid, ScreenMasks.NukePriority, Screenmasks.Nuke, TimeSpan.Zero, Color.Red);
+            var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
             _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }
 

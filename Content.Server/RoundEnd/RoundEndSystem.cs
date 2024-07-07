@@ -16,6 +16,7 @@ using Content.Server.Station.Systems;
 using Content.Shared.Database;
 using Content.Shared.DeviceNetwork;
 using Content.Shared.GameTicking;
+using Content.Shared.Screen;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.Player;
@@ -202,15 +203,12 @@ namespace Content.Server.RoundEnd
             var shuttle = _shuttle.GetShuttle();
             if (shuttle != null && TryComp<DeviceNetworkComponent>(shuttle, out var net))
             {
-                var payload = new NetworkPayload
-                {
-                    [ScreenMasks.ShuttleMap] = shuttle,
-                    [ScreenMasks.SourceMap] = GetCentcomm(),
-                    [ScreenMasks.DestMap] = GetStation(),
-                    [ScreenMasks.ShuttleTime] = countdownTime,
-                    [ScreenMasks.SourceTime] = countdownTime + TimeSpan.FromSeconds(_shuttle.TransitTime + _cfg.GetCVar(CCVars.EmergencyShuttleDockTime)),
-                    [ScreenMasks.DestTime] = countdownTime,
-                };
+                var shuttleUpdate = new ScreenUpdate(shuttle, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, countdownTime);
+                var sourceUpdate = new ScreenUpdate(GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA,
+                countdownTime + TimeSpan.FromSeconds(_shuttle.TransitTime + _cfg.GetCVar(CCVars.EmergencyShuttleDockTime)));
+                var destUpdate = new ScreenUpdate(GetStation(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, countdownTime);
+
+                var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
                 _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
             }
         }
@@ -243,20 +241,16 @@ namespace Content.Server.RoundEnd
             ActivateCooldown();
             RaiseLocalEvent(RoundEndSystemChangedEvent.Default);
 
-            // remove active clientside evac shuttle timers by zeroing the target time
+            // remove evac shuttle timers by zeroing the target time
             var zero = TimeSpan.Zero;
             var shuttle = _shuttle.GetShuttle();
             if (shuttle != null && TryComp<DeviceNetworkComponent>(shuttle, out var net))
             {
-                var payload = new NetworkPayload
-                {
-                    [ScreenMasks.ShuttleMap] = shuttle,
-                    [ScreenMasks.SourceMap] = GetCentcomm(),
-                    [ScreenMasks.DestMap] = GetStation(),
-                    [ScreenMasks.ShuttleTime] = zero,
-                    [ScreenMasks.SourceTime] = zero,
-                    [ScreenMasks.DestTime] = zero,
-                };
+                var shuttleUpdate = new ScreenUpdate(shuttle, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, zero);
+                var sourceUpdate = new ScreenUpdate(GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, zero);
+                var destUpdate = new ScreenUpdate(GetStation(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, zero);
+
+                var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
                 _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
             }
         }
