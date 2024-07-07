@@ -1,6 +1,5 @@
 using Content.Server.DeviceLinking.Components;
 using Content.Server.DeviceLinking.Events;
-using Content.Server.Screens.Components;
 using Content.Shared.UserInterface;
 using Content.Shared.Access.Systems;
 using Content.Shared.MachineLinking;

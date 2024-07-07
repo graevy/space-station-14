@@ -31,6 +31,35 @@ public enum ScreenVisuals : byte
     // Color
 }
 
+/// <summary>
+///     Player-facing hashable consts for NetworkPayloads
+/// </summary>
+public sealed class ScreenMasks
+{
+    public static readonly string Text = Loc.GetString("screen-text");
+    public static readonly string Timer = Loc.GetString("screen-timer");
+    public static readonly string Color = Loc.GetString("screen-color");
+    public static readonly string Priority = Loc.GetString("screen-priority");
+
+    // lower priority int = higher priority display
+    public static readonly int DefaultPriority = 40;
+    public static readonly int ShuttlePriority = 30;
+    public static readonly int BrigPriority = 20;
+    public static readonly int NukePriority = 10;
+
+    // main updates dict
+    public static readonly string Updates = Loc.GetString("screen-timer-updates");
+
+    // shuttle timers
+    public static readonly string ETA = Loc.GetString("screen-timer-eta");
+    public static readonly string ETD = Loc.GetString("screen-timer-etd");
+    public static readonly string Bye = Loc.GetString("screen-timer-bye");
+    public static readonly string Kill = Loc.GetString("screen-timer-kill");
+
+    // nuke timers
+    public static readonly string Nuke = Loc.GetString("screen-timer-nuke");
+}
+
 public struct ScreenUpdate
 {
     public EntityUid? Subnet { get; }
@@ -77,33 +106,3 @@ public struct ScreenUpdate
     }
 
 }
-
-// public sealed class ScreenUpdates
-// {
-//     // forgive me
-//     public Dictionary<int, Stack<ScreenUpdate>> Priorities = new();
-//     public uint Count = 0;
-
-//     public ScreenUpdates()
-//     {
-//     }
-
-//     public void Append(ScreenUpdate update)
-//     {
-//         if (!Priorities.ContainsKey(update.Priority))
-//             Priorities.Add(update.Priority, new Stack<ScreenUpdate>());
-
-//         var stack = Priorities[update.Priority];
-
-//         // if an update doesn't have a timer, it never expires, so everything else in the stack can be safely removed
-//         if (!update.HasTimer())
-//             stack.Clear();
-
-//         stack.Push(update);
-//     }
-
-//     public void Remove()
-//     {
-
-//     }
-// }

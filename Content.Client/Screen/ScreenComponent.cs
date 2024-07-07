@@ -6,7 +6,7 @@ using Robust.Client.Graphics;
 namespace Content.Client.Screen;
 
 [RegisterComponent]
-public sealed partial class ScreenVisualsComponent : Component
+public sealed partial class ScreenComponent : Component
 {
     /// <summary>
     ///     1/32 - the size of a pixel
@@ -16,11 +16,15 @@ public sealed partial class ScreenVisualsComponent : Component
     /// <summary>
     ///     The color of the text drawn.
     /// </summary>
-    /// <remarks>
-    ///     15,151,251 is the old ss13 color, from tg
-    /// </remarks>
     [DataField("color"), ViewVariables(VVAccess.ReadWrite)]
     public Color Color = new Color(15, 151, 251);
+
+    /// <summary>
+    ///     Color used for every ScreenUpdate that doesn't supply one
+    ///     15,151,251 is the old ss13 color, from tg
+    /// </summary>
+    [DataField("defaultColor"), ViewVariables(VVAccess.ReadWrite)]
+    public Color DefaultColor = new Color(15, 151, 251);
 
     /// <summary>
     ///     Offset for centering the text.
@@ -78,5 +82,4 @@ public sealed partial class ScreenVisualsComponent : Component
 
     public ScreenUpdate? ActiveUpdate;
     public SortedDictionary<int, ScreenUpdate> Updates = new();
-    public int MaxUpdates = 8;
 }

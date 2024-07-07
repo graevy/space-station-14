@@ -11,7 +11,6 @@ using Content.Server.GameTicking.Events;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
 using Content.Server.RoundEnd;
-using Content.Server.Screens.Components;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Events;
 using Content.Server.Station.Components;
