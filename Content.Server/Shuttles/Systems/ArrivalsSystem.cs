@@ -208,13 +208,6 @@ public sealed class ArrivalsSystem : EntitySystem
             TryComp<FTLComponent>(shuttleUid, out var ftlComp);
             var ftlTime = TimeSpan.FromSeconds(ftlComp?.TravelTime ?? _shuttles.DefaultTravelTime);
 
-            // var payload = new NetworkPayload
-            // {
-                // [ScreenMasks.ShuttleMap] = shuttleUid,
-                // [ScreenMasks.ShuttleTime] = ftlTime
-            // };
-
-
             // unfortunate levels of spaghetti due to roundstart arrivals ftl behavior
             // on the first arrivals ftl, need to get the dest map (the station), also the arrivals shuttle leaves 10 seconds earlier
             EntityUid? sourceMap;
@@ -229,8 +222,6 @@ public sealed class ArrivalsSystem : EntitySystem
                 arrivalsDelay += RoundStartFTLDuration;
                 component.FirstRun = false;
                 updates[2] = new ScreenUpdate(Transform(args.TargetCoordinates.EntityId).MapUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
-                // payload.Add(ScreenMasks.DestMap, Transform(args.TargetCoordinates.EntityId).MapUid);
-                // payload.Add(ScreenMasks.DestTime, ftlTime);
             }
             else
                 sourceMap = args.FromMapUid;
@@ -239,9 +230,6 @@ public sealed class ArrivalsSystem : EntitySystem
             updates[1] = new ScreenUpdate(sourceMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
 
             var payload = new NetworkPayload { [ScreenMasks.Updates] = updates };
-            // payload.Add(ScreenMasks.SourceMap, sourceMap);
-            // payload.Add(ScreenMasks.SourceTime, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
-
             _deviceNetworkSystem.QueuePacket(shuttleUid, null, payload, netComp.TransmitFrequency);
         }
 

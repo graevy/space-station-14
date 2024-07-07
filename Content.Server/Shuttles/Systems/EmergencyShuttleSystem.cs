@@ -306,17 +306,8 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
                 var shuttleUpdate = new ScreenUpdate(stationShuttle.EmergencyShuttle.Value, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
                 var sourceUpdate = new ScreenUpdate(targetXform?.MapUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
                 var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
-                var payload = new NetworkPayload
-                {
-                    [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate }
-                    // [ScreenMasks.ShuttleMap] = stationShuttle.EmergencyShuttle.Value,
-                    // [ScreenMasks.SourceMap] = targetXform?.MapUid,
-                    // [ScreenMasks.DestMap] = _roundEnd.GetCentcomm(),
-                    // [ScreenMasks.ShuttleTime] = time,
-                    // [ScreenMasks.SourceTime] = time,
-                    // [ScreenMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
-                    // [ScreenMasks.Docked] = true
-                };
+
+                var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
                 _deviceNetworkSystem.QueuePacket(stationShuttle.EmergencyShuttle.Value, null, payload, netComp.TransmitFrequency);
             }
 
