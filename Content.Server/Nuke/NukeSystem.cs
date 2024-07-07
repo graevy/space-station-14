@@ -6,11 +6,12 @@ using Content.Server.DeviceNetwork.Systems;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
-using Content.Server.Screens;
+using Content.Server.Screens.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.Audio;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Coordinates.Helpers;
+using Content.Shared.DeviceNetwork;
 using Content.Shared.DoAfter;
 using Content.Shared.Examine;
 using Content.Shared.Maps;
@@ -481,9 +482,9 @@ public sealed class NukeSystem : EntitySystem
         // display nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var update = new ScreenUpdate(nukeXform.MapUid, ScreenMasks.NukePriority, Screenmasks.Nuke, TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
+            var update = new ScreenUpdate(nukeXform.MapUid, ScreenMasks.NukePriority, ScreenMasks.Nuke, TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
             var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
-            _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
+            _network.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }
 
         _itemSlots.SetLock(uid, component.DiskSlot, true);
@@ -534,9 +535,9 @@ public sealed class NukeSystem : EntitySystem
         // cancel the nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var update = new ScreenUpdate(Transform(uid).MapUid, ScreenMasks.NukePriority, Screenmasks.Nuke, TimeSpan.Zero, Color.Red);
+            var update = new ScreenUpdate(Transform(uid).MapUid, ScreenMasks.NukePriority, ScreenMasks.Nuke, TimeSpan.Zero, Color.Red);
             var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
-            _net.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
+            _network.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }
 
         // start bomb cooldown

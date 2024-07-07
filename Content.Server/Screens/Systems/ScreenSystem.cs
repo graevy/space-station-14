@@ -13,9 +13,9 @@ namespace Content.Server.Screens.Systems;
 /// </summary>
 public sealed class ScreenSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    // [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly DeviceNetworkSystem _network = default!;
+    // [Dependency] private readonly DeviceNetworkSystem _network = default!;
 
     public override void Initialize()
     {

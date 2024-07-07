@@ -34,10 +34,11 @@ public sealed class ScreenMasks
     public static readonly string Color = Loc.GetString("screen-color");
     public static readonly string Priority = Loc.GetString("screen-priority");
 
-    // higher priority updates display above lower priority updates
+    // higher priority updates display before lower priority updates
     public static readonly int DefaultPriority = 0;
     public static readonly int ShuttlePriority = 1;
-    public static readonly int NukePriority = 2;
+    public static readonly int BrigPriority = 2;
+    public static readonly int NukePriority = 3;
 
     // main updates dict
     public static readonly string Updates = Loc.GetString("screen-timer-updates");

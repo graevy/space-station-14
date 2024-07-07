@@ -1,5 +1,6 @@
 using Content.Server.DeviceLinking.Components;
 using Content.Server.DeviceLinking.Events;
+using Content.Server.Screens.Components;
 using Content.Shared.UserInterface;
 using Content.Shared.Access.Systems;
 using Content.Shared.MachineLinking;
@@ -39,8 +40,10 @@ public sealed class SignalTimerSystem : EntitySystem
 
     private void OnInit(EntityUid uid, SignalTimerComponent component, ComponentInit args)
     {
-        _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
-        _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
+        var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, component.Label);
+        _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
+        // _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
+        // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
         _signalSystem.EnsureSinkPorts(uid, component.Trigger);
     }
 
@@ -138,8 +141,10 @@ public sealed class SignalTimerSystem : EntitySystem
         {
             // could maybe move the defaulttext update out of this block,
             // if you delved deep into appearance update batching
-            _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
-            _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
+            var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, component.Label);
+            _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
+            // _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
+            // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
         }
     }
 
@@ -153,7 +158,9 @@ public sealed class SignalTimerSystem : EntitySystem
             return;
 
         component.Delay = args.Delay.TotalSeconds;
-        _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, component.Delay);
+        var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, null, TimeSpan.FromSeconds(component.Delay));
+        _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
+        // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, component.Delay);
     }
 
     /// <summary>
@@ -168,7 +175,9 @@ public sealed class SignalTimerSystem : EntitySystem
         // feedback received: pressing the timer button while a timer is running should cancel the timer.
         if (HasComp<ActiveSignalTimerComponent>(uid))
         {
-            _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, _gameTiming.CurTime);
+            var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, null, TimeSpan.Zero);
+            _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
+            // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, _gameTiming.CurTime);
             Trigger(uid, component);
         }
         else
@@ -191,8 +200,10 @@ public sealed class SignalTimerSystem : EntitySystem
 
         if (appearance != null)
         {
-            _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, timer.TriggerTime, appearance);
-            _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, string.Empty, appearance);
+            var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, null, timer.TriggerTime);
+            _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
+            // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, timer.TriggerTime, appearance);
+            // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, string.Empty, appearance);
         }
 
         _signalSystem.InvokePort(uid, component.StartPort);
