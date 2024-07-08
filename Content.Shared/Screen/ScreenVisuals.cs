@@ -31,6 +31,14 @@ public enum ScreenVisuals : byte
     // Color
 }
 
+public enum ScreenPriority : byte
+{
+    Nuke,
+    Brig,
+    Shuttle,
+    Default
+}
+
 /// <summary>
 ///     Player-facing hashable consts for NetworkPayloads
 /// </summary>
@@ -42,10 +50,10 @@ public sealed class ScreenMasks
     public static readonly string Priority = Loc.GetString("screen-priority");
 
     // lower priority int = higher priority display
-    public static readonly int DefaultPriority = 40;
-    public static readonly int ShuttlePriority = 30;
-    public static readonly int BrigPriority = 20;
-    public static readonly int NukePriority = 10;
+    // public static readonly int DefaultPriority = 40;
+    // public static readonly int ShuttlePriority = 30;
+    // public static readonly int BrigPriority = 20;
+    // public static readonly int NukePriority = 10;
 
     // main updates dict
     public static readonly string Updates = Loc.GetString("screen-timer-updates");
@@ -63,12 +71,12 @@ public sealed class ScreenMasks
 public struct ScreenUpdate
 {
     public EntityUid? Subnet { get; }
-    public int Priority { get; }
+    public ScreenPriority Priority { get; }
     public string? Text { get; }
     public TimeSpan? Timer { get; }
     public Color? Color { get; }
 
-    public ScreenUpdate(EntityUid? subnet, int priority, string? text = null, TimeSpan? timer = null, Color? color = null)
+    public ScreenUpdate(EntityUid? subnet, ScreenPriority priority, string? text = null, TimeSpan? timer = null, Color? color = null)
     {
         Subnet = subnet; Priority = priority; Text = text; Timer = timer; Color = color;
     }

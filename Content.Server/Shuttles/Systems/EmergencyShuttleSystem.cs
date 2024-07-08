@@ -211,20 +211,20 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
 
         // var updates = new Dictionary<EntityUid, ScreenUpdate>
         // {
-        //     { uid, new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime) },
+        //     { uid, new ScreenUpdate(ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime) },
         // };
         // if (args.FromMapUid != null)
-        //     updates[args.FromMapUid.Value] = new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        //     updates[args.FromMapUid.Value] = new ScreenUpdate(ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
         // var target = args.TargetCoordinates.GetMapUid(_entityManager);
         // if (target != null)
-        //     updates[target.Value] = new ScreenUpdate(ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        //     updates[target.Value] = new ScreenUpdate(ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
 
         var sourceMap = args.FromMapUid;
         var destMap = args.TargetCoordinates.GetMapUid(_entityManager);
 
-        var shuttleUpdate = new ScreenUpdate(uid, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
-        var sourceUpdate = new ScreenUpdate(sourceMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
-        var destUpdate = new ScreenUpdate(destMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+        var shuttleUpdate = new ScreenUpdate(uid, ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
+        var sourceUpdate = new ScreenUpdate(sourceMap, ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
+        var destUpdate = new ScreenUpdate(destMap, ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
 
         var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
 
@@ -249,9 +249,9 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
             // by popular request
             // https://discord.com/channels/310555209753690112/770682801607278632/1189989482234126356
             var countdownText = _random.Next(1000) > 0 ? ScreenMasks.Bye : ScreenMasks.Kill;
-            var shuttleUpdate = new ScreenUpdate(args.Entity, ScreenMasks.ShuttlePriority, countdownText, countdownTime);
-            var sourceUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, countdownText, countdownTime);
-            var destUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenMasks.ShuttlePriority, countdownText, countdownTime);
+            var shuttleUpdate = new ScreenUpdate(args.Entity, ScreenPriority.Shuttle, countdownText, countdownTime);
+            var sourceUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenPriority.Shuttle, countdownText, countdownTime);
+            var destUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenPriority.Shuttle, countdownText, countdownTime);
 
             var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
 
@@ -302,9 +302,9 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
             var time = TimeSpan.FromSeconds(_consoleAccumulator);
             if (TryComp<DeviceNetworkComponent>(stationShuttle.EmergencyShuttle.Value, out var netComp))
             {
-                var shuttleUpdate = new ScreenUpdate(stationShuttle.EmergencyShuttle.Value, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
-                var sourceUpdate = new ScreenUpdate(targetXform?.MapUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
-                var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
+                var shuttleUpdate = new ScreenUpdate(stationShuttle.EmergencyShuttle.Value, ScreenPriority.Shuttle, ScreenMasks.ETD, time);
+                var sourceUpdate = new ScreenUpdate(targetXform?.MapUid, ScreenPriority.Shuttle, ScreenMasks.ETD, time);
+                var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenPriority.Shuttle, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
 
                 var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
                 _deviceNetworkSystem.QueuePacket(stationShuttle.EmergencyShuttle.Value, null, payload, netComp.TransmitFrequency);

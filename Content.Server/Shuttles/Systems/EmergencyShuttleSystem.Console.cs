@@ -383,9 +383,9 @@ public sealed partial class EmergencyShuttleSystem
         var shuttle = GetShuttle();
         if (shuttle != null && TryComp<DeviceNetworkComponent>(shuttle, out var net))
         {
-            var shuttleUpdate = new ScreenUpdate(shuttle, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
-            var sourceUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenMasks.ShuttlePriority, ScreenMasks.ETD, time);
-            var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenMasks.ShuttlePriority, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
+            var shuttleUpdate = new ScreenUpdate(shuttle, ScreenPriority.Shuttle, ScreenMasks.ETD, time);
+            var sourceUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenPriority.Shuttle, ScreenMasks.ETD, time);
+            var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenPriority.Shuttle, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
             var payload = new NetworkPayload
             {
                 [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate }

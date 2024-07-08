@@ -109,7 +109,6 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
             return;
 
         component.Updates[update.Priority] = update;
-
         RefreshActiveUpdate(uid, component);
     }
 

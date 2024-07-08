@@ -12,5 +12,5 @@ public sealed partial class ScreenTimerComponent : Component
     [DataField("targetTime", customTypeSerializer: typeof(TimeOffsetSerializer))]
     public TimeSpan Target = TimeSpan.Zero;
     public Dictionary<string, string?> LayerStatesToDraw = new();
-    public int Priority = ScreenMasks.DefaultPriority;
+    public ScreenPriority Priority = ScreenPriority.Default;
 }

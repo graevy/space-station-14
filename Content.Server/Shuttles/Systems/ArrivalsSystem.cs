@@ -220,13 +220,13 @@ public sealed class ArrivalsSystem : EntitySystem
                 sourceMap = station == null ? null : Transform(station.Value)?.MapUid;
                 arrivalsDelay += RoundStartFTLDuration;
                 component.FirstRun = false;
-                updates[2] = new ScreenUpdate(Transform(args.TargetCoordinates.EntityId).MapUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
+                updates[2] = new ScreenUpdate(Transform(args.TargetCoordinates.EntityId).MapUid, ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
             }
             else
                 sourceMap = args.FromMapUid;
 
-            updates[0] = new ScreenUpdate(shuttleUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime);
-            updates[1] = new ScreenUpdate(sourceMap, ScreenMasks.ShuttlePriority, ScreenMasks.ETA, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
+            updates[0] = new ScreenUpdate(shuttleUid, ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
+            updates[1] = new ScreenUpdate(sourceMap, ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
 
             var payload = new NetworkPayload { [ScreenMasks.Updates] = updates };
             _deviceNetworkSystem.QueuePacket(shuttleUid, null, payload, netComp.TransmitFrequency);
@@ -275,8 +275,8 @@ public sealed class ArrivalsSystem : EntitySystem
 
         if (TryComp<DeviceNetworkComponent>(uid, out var netComp))
         {
-            var shuttleUpdate = new ScreenUpdate(uid, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, dockTime);
-            var sourceUpdate = new ScreenUpdate(args.MapUid, ScreenMasks.ShuttlePriority, ScreenMasks.ETD, dockTime);
+            var shuttleUpdate = new ScreenUpdate(uid, ScreenPriority.Shuttle, ScreenMasks.ETD, dockTime);
+            var sourceUpdate = new ScreenUpdate(args.MapUid, ScreenPriority.Shuttle, ScreenMasks.ETD, dockTime);
             var payload = new NetworkPayload
             {
                 [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate }

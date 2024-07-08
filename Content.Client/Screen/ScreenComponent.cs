@@ -81,5 +81,5 @@ public sealed partial class ScreenComponent : Component
     public string SecondFormat = "D2";
 
     public ScreenUpdate? ActiveUpdate;
-    public SortedDictionary<int, ScreenUpdate> Updates = new();
+    public SortedDictionary<ScreenPriority, ScreenUpdate> Updates = new();
 }

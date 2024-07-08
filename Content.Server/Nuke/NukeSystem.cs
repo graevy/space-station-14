@@ -481,7 +481,7 @@ public sealed class NukeSystem : EntitySystem
         // display nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var update = new ScreenUpdate(nukeXform.MapUid, ScreenMasks.NukePriority, ScreenMasks.Nuke, TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
+            var update = new ScreenUpdate(nukeXform.MapUid, ScreenPriority.Nuke, ScreenMasks.Nuke, TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
             var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
             _network.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }
@@ -534,7 +534,7 @@ public sealed class NukeSystem : EntitySystem
         // cancel the nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var update = new ScreenUpdate(Transform(uid).MapUid, ScreenMasks.NukePriority, ScreenMasks.Nuke, TimeSpan.Zero, Color.Red);
+            var update = new ScreenUpdate(Transform(uid).MapUid, ScreenPriority.Nuke, ScreenMasks.Nuke, TimeSpan.Zero, Color.Red);
             var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
             _network.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }

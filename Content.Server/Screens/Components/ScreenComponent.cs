@@ -1,5 +1,3 @@
-using Content.Shared.Screen;
-
 namespace Content.Server.Screen.Components;
 
 [RegisterComponent]

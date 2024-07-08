@@ -39,7 +39,7 @@ public sealed class SignalTimerSystem : EntitySystem
 
     private void OnInit(EntityUid uid, SignalTimerComponent component, ComponentInit args)
     {
-        var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, component.Label);
+        var update = new ScreenUpdate(uid, ScreenPriority.Brig, component.Label);
         _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
         // _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
         // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
@@ -140,7 +140,7 @@ public sealed class SignalTimerSystem : EntitySystem
         {
             // could maybe move the defaulttext update out of this block,
             // if you delved deep into appearance update batching
-            var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, component.Label);
+            var update = new ScreenUpdate(uid, ScreenPriority.Brig, component.Label);
             _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
             // _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
             // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
@@ -157,7 +157,7 @@ public sealed class SignalTimerSystem : EntitySystem
             return;
 
         component.Delay = args.Delay.TotalSeconds;
-        var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, null, TimeSpan.FromSeconds(component.Delay));
+        var update = new ScreenUpdate(uid, ScreenPriority.Brig, null, TimeSpan.FromSeconds(component.Delay));
         _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
         // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, component.Delay);
     }
@@ -174,7 +174,7 @@ public sealed class SignalTimerSystem : EntitySystem
         // feedback received: pressing the timer button while a timer is running should cancel the timer.
         if (HasComp<ActiveSignalTimerComponent>(uid))
         {
-            var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, null, TimeSpan.Zero);
+            var update = new ScreenUpdate(uid, ScreenPriority.Brig, null, TimeSpan.Zero);
             _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
             // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, _gameTiming.CurTime);
             Trigger(uid, component);
@@ -199,7 +199,7 @@ public sealed class SignalTimerSystem : EntitySystem
 
         if (appearance != null)
         {
-            var update = new ScreenUpdate(uid, ScreenMasks.BrigPriority, null, timer.TriggerTime);
+            var update = new ScreenUpdate(uid, ScreenPriority.Brig, null, timer.TriggerTime);
             _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
             // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, timer.TriggerTime, appearance);
             // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, string.Empty, appearance);
