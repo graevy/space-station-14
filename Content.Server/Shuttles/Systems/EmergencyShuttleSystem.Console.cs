@@ -383,20 +383,12 @@ public sealed partial class EmergencyShuttleSystem
         var shuttle = GetShuttle();
         if (shuttle != null && TryComp<DeviceNetworkComponent>(shuttle, out var net))
         {
-            var shuttleUpdate = new ScreenUpdate(shuttle, ScreenPriority.Shuttle, ScreenMasks.ETD, time);
-            var sourceUpdate = new ScreenUpdate(_roundEnd.GetStation(), ScreenPriority.Shuttle, ScreenMasks.ETD, time);
-            var destUpdate = new ScreenUpdate(_roundEnd.GetCentcomm(), ScreenPriority.Shuttle, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
-            var payload = new NetworkPayload
-            {
-                [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate }
-                // [ScreenMasks.ShuttleMap] = shuttle,
-                // [ScreenMasks.SourceMap] = _roundEnd.GetStation(),
-                // [ScreenMasks.DestMap] = _roundEnd.GetCentcomm(),
-                // [ScreenMasks.ShuttleTime] = time,
-                // [ScreenMasks.SourceTime] = time,
-                // [ScreenMasks.DestTime] = time + TimeSpan.FromSeconds(TransitTime),
-                // [ScreenMasks.Docked] = true
-            };
+            var shuttleUpdate = new ScreenUpdate(GetNetEntity(shuttle), ScreenPriority.Shuttle, ScreenMasks.ETD, time);
+            var sourceUpdate = new ScreenUpdate(GetNetEntity(_roundEnd.GetStation()), ScreenPriority.Shuttle, ScreenMasks.ETD, time);
+            var destUpdate = new ScreenUpdate(GetNetEntity(_roundEnd.GetCentcomm()),
+                ScreenPriority.Shuttle, ScreenMasks.ETA, time + TimeSpan.FromSeconds(TransitTime));
+
+            var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
             _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);
         }
 

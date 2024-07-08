@@ -11,9 +11,7 @@ namespace Content.Server.Screen.Systems;
 /// </summary>
 public sealed class ScreenSystem : EntitySystem
 {
-    // [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-    // [Dependency] private readonly DeviceNetworkSystem _network = default!;
 
     public override void Initialize()
     {
@@ -41,7 +39,7 @@ public sealed class ScreenSystem : EntitySystem
 
         foreach (var update in updates)
             // the griduid check handled some null mapuid edge case involving hyperspace iirc
-            if (update != null && update.Subnet == timerXform.MapUid || update.Subnet == timerXform.GridUid)
+            if (update != null && TryGetEntity(update.Subnet, out var subnet) && (subnet == timerXform.MapUid || subnet == timerXform.GridUid))
                 _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
     }
 }

@@ -289,7 +289,7 @@ namespace Content.Server.Communications
             if (!TryComp<DeviceNetworkComponent>(uid, out var net))
                 return;
 
-            var update = new ScreenUpdate(uid, ScreenPriority.Default, message.Message);
+            var update = new ScreenUpdate(GetNetEntity(Transform(uid).MapUid), ScreenPriority.Default, message.Message);
             var payload = new NetworkPayload
             {
                 [ScreenMasks.Updates] = new ScreenUpdate[] { update }
