@@ -117,54 +117,55 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         RefreshActiveUpdate(uid, component);
     }
 
+    /// this method is a hack because i'm still passing updates through the appearancesystem.
+    /// deleting timers by setting them to TimeSpan.Zero in e.g. the emergencyshuttlesystem,
+    /// instead of building a server -> client system for the screens makes timer handling awkwardly precise, because:
+    /// ScreenUpdate deletion is lazy; recalling the shuttle leaves the zeroed timer in Updates until draw time.
+    /// the next refactor if it ever happens should address the abuse of the appearancesystem
     /// <summary>
     ///     Draws the first member of <see cref="ScreenComponent.Updates"/>
     /// </summary>
     /// <param name="uid"></param>
     /// <param name="component"></param>
-    private void RefreshActiveUpdate(EntityUid uid, ScreenComponent component)
+    private void RefreshActiveUpdate(EntityUid uid, ScreenComponent screen)
     {
         if (!TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        // if updates is empty, we still want to clear the screen
-        if (component.Updates.Count == 0)
-        {
-            ClearLayerStates(uid, component, sprite);
+        ClearLayerStates(uid, screen, sprite);
+
+        // nothing to draw
+        if (screen.Updates.Count == 0)
             return;
-        }
 
-        ScreenUpdate first = component.Updates.First().Value;
-        component.ActiveUpdate = first;
+        ScreenUpdate first = screen.Updates.First().Value;
+        screen.ActiveUpdate = first;
 
-        var color = first.Color;
+        // color gets delegated to DrawLayers
         var text = first.Text;
         var target = first.Timer;
         var priority = first.Priority;
 
-        // component.Color = color != null ? color.Value : component.DefaultColor;
-
-        ClearLayerStates(uid, component, sprite);
-
-        if (text != null)
-        {
-            BuildTextLayers(uid, component, sprite);
-            DrawLayers(uid, component, component.LayerStatesToDraw);
-        }
         if (target != null)
         {
+            var timer = EnsureComp<ScreenTimerComponent>(uid);
+            timer.Target = target.Value;
+            timer.Priority = priority;
             if (target > _gameTiming.CurTime)
             {
-                var timer = EnsureComp<ScreenTimerComponent>(uid);
-                timer.Target = target.Value;
-                timer.Priority = priority;
-                BuildTimerLayers(uid, timer, component);
-                DrawLayers(uid, component, timer.LayerStatesToDraw);
+                BuildTimerLayers(uid, timer, screen);
+                DrawLayers(uid, screen, timer.LayerStatesToDraw);
             }
             else
             {
-                OnTimerFinish(uid, component);
+                OnTimerFinish(uid, screen);
+                return;
             }
+        }
+        if (text != null)
+        {
+            BuildTextLayers(uid, screen, sprite);
+            DrawLayers(uid, screen, screen.LayerStatesToDraw);
         }
     }
 
@@ -223,7 +224,6 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
                 sprite.LayerMapReserveBlank(key);
                 component.LayerStatesToDraw.Add(key, null);
                 sprite.LayerSetRSI(key, new ResPath(TextPath));
-                // sprite.LayerSetColor(key, component.Color);
                 sprite.LayerSetState(key, DefaultState);
             }
     }
