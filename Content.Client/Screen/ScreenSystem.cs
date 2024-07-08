@@ -119,7 +119,10 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
     /// <param name="component"></param>
     private void RefreshActiveUpdate(EntityUid uid, ScreenComponent component)
     {
-        ClearScreen(uid, component);
+        if (!TryComp<SpriteComponent>(uid, out var sprite))
+            return;
+
+        ClearScreen(uid, component, sprite);
 
         if (component.Updates.Count == 0)
             return;
@@ -140,6 +143,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (text != null)
         {
             component.Text = SegmentText(text, component);
+            BuildTextLayers(uid, component, sprite);
             DrawLayers(uid, component.LayerStatesToDraw);
         }
         if (target != null)
@@ -198,11 +202,8 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         return segmented;
     }
 
-    private void ClearScreen(EntityUid uid, ScreenComponent component, SpriteComponent? sprite = null)
+    private void ClearScreen(EntityUid uid, ScreenComponent component, SpriteComponent sprite)
     {
-        if (!Resolve(uid, ref sprite))
-            return;
-
         ClearLayerStates(uid, component, sprite);
         BuildTextLayers(uid, component, sprite);
     }
