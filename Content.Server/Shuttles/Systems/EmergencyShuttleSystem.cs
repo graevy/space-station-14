@@ -209,16 +209,6 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
         if (!TryComp<DeviceNetworkComponent>(uid, out var netComp))
             return;
 
-        // var updates = new Dictionary<EntityUid, ScreenUpdate>
-        // {
-        //     { uid, new ScreenUpdate(ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime) },
-        // };
-        // if (args.FromMapUid != null)
-        //     updates[args.FromMapUid.Value] = new ScreenUpdate(ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
-        // var target = args.TargetCoordinates.GetMapUid(_entityManager);
-        // if (target != null)
-        //     updates[target.Value] = new ScreenUpdate(ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
-
         var sourceMap = args.FromMapUid;
         var destMap = args.TargetCoordinates.GetMapUid(_entityManager);
 
@@ -228,12 +218,6 @@ public sealed partial class EmergencyShuttleSystem : EntitySystem
 
         var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
 
-        // var shuttlePayload = new NetworkPayload { [ScreenMasks.Update] = shuttleUpdate };
-        // var sourcePayload = new NetworkPayload { [ScreenMasks.Update] = sourceUpdate };
-        // var destPayload = new NetworkPayload { [ScreenMasks.Update] = destUpdate };
-
-        // _deviceNetworkSystem.QueuePacket(uid, null, shuttlePayload, netComp.TransmitFrequency);
-        // _deviceNetworkSystem.QueuePacket(uid, null, sourcePayload, netComp.TransmitFrequency);
         _deviceNetworkSystem.QueuePacket(uid, null, payload, netComp.TransmitFrequency);
     }
 

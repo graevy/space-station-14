@@ -1,11 +1,11 @@
 - type: deviceFrequency
   id: Screen
-  name: device-frequency-prototype-name-shuttle-timer
+  name: device-frequency-prototype-name-screen
   frequency: 2450
 
 - type: deviceFrequency
   id: ArrivalsScreen
-  name: device-frequency-prototype-name-arrivals-shuttle-timer
+  name: device-frequency-prototype-name-arrivals-screen
   frequency: 2451
 
 - type: deviceFrequency

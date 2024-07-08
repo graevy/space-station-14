@@ -46,22 +46,22 @@ public enum ScreenPriority : byte
 [Serializable, NetSerializable]
 public sealed class ScreenMasks
 {
-    public static readonly string Text = Loc.GetString("screen-text");
-    public static readonly string Timer = Loc.GetString("screen-timer");
-    public static readonly string Color = Loc.GetString("screen-color");
-    public static readonly string Priority = Loc.GetString("screen-priority");
+    // public static readonly string Text = Loc.GetString("screen-text");
+    // public static readonly string Timer = Loc.GetString("screen-timer");
+    // public static readonly string Color = Loc.GetString("screen-color");
+    // public static readonly string Priority = Loc.GetString("screen-priority");
 
     // main updates dict
-    public static readonly string Updates = Loc.GetString("screen-timer-updates");
+    public static readonly string Updates = Loc.GetString("screen-updates");
 
     // shuttle timer accompanying text
-    public static readonly string ETA = Loc.GetString("screen-timer-eta");
-    public static readonly string ETD = Loc.GetString("screen-timer-etd");
-    public static readonly string Bye = Loc.GetString("screen-timer-bye");
-    public static readonly string Kill = Loc.GetString("screen-timer-kill");
+    public static readonly string ETA = Loc.GetString("screen-eta");
+    public static readonly string ETD = Loc.GetString("screen-etd");
+    public static readonly string Bye = Loc.GetString("screen-bye");
+    public static readonly string Kill = Loc.GetString("screen-kill");
 
     // nuke timer accompanying text
-    public static readonly string Nuke = Loc.GetString("screen-timer-nuke");
+    public static readonly string Nuke = Loc.GetString("screen-nuke");
 }
 
 [Serializable, NetSerializable]

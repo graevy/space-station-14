@@ -1,11 +1,6 @@
 screen-eta = ETA
 screen-etd = ETD
-screen-shuttle-time = ShuttleTime
-screen-source-time = SourceTime
-screen-dest-time = DestTime
-screen-shuttle-map = ShuttleMap
-screen-source-map = SourceMap
-screen-dest-map = DestMap
-screen-docked = Docked
 screen-bye = BYE!
 screen-kill = KILL
+screen-nuke = NUKE
+screen-updates = updates
