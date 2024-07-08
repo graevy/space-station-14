@@ -41,8 +41,6 @@ public sealed class SignalTimerSystem : EntitySystem
     {
         var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, component.Label);
         _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
-        // _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
-        // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
         _signalSystem.EnsureSinkPorts(uid, component.Trigger);
     }
 
@@ -52,7 +50,8 @@ public sealed class SignalTimerSystem : EntitySystem
 
         if (_ui.HasUi(uid, SignalTimerUiKey.Key))
         {
-            _ui.SetUiState(uid, SignalTimerUiKey.Key, new SignalTimerBoundUserInterfaceState(component.Label,
+            _ui.SetUiState(uid, SignalTimerUiKey.Key, new SignalTimerBoundUserInterfaceState(
+                component.Label,
                 TimeSpan.FromSeconds(component.Delay).Minutes.ToString("D2"),
                 TimeSpan.FromSeconds(component.Delay).Seconds.ToString("D2"),
                 component.CanEditLabel,
@@ -72,9 +71,13 @@ public sealed class SignalTimerSystem : EntitySystem
         _audio.PlayPvs(signalTimer.DoneSound, uid);
         _signalSystem.InvokePort(uid, signalTimer.TriggerPort);
 
+        var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, signalTimer.Label);
+        _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
+
         if (_ui.HasUi(uid, SignalTimerUiKey.Key))
         {
-            _ui.SetUiState(uid, SignalTimerUiKey.Key, new SignalTimerBoundUserInterfaceState(signalTimer.Label,
+            _ui.SetUiState(uid, SignalTimerUiKey.Key, new SignalTimerBoundUserInterfaceState(
+                signalTimer.Label,
                 TimeSpan.FromSeconds(signalTimer.Delay).Minutes.ToString("D2"),
                 TimeSpan.FromSeconds(signalTimer.Delay).Seconds.ToString("D2"),
                 signalTimer.CanEditLabel,
@@ -138,8 +141,6 @@ public sealed class SignalTimerSystem : EntitySystem
 
         if (!HasComp<ActiveSignalTimerComponent>(uid))
         {
-            // could maybe move the defaulttext update out of this block,
-            // if you delved deep into appearance update batching
             var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, component.Label);
             _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
         }
@@ -157,7 +158,6 @@ public sealed class SignalTimerSystem : EntitySystem
         component.Delay = args.Delay.TotalSeconds;
         var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, null, _gameTiming.CurTime + TimeSpan.FromSeconds(component.Delay));
         _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
-        // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, component.Delay);
     }
 
     /// <summary>
