@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 namespace Content.Client.Screen;
 
 /// overview:
-/// Data is passed from server to client through <see cref="SharedAppearanceSystem.SetData"/>,
+/// Data is passed as a <see cref="ScreenUpdate"/> from server to client through <see cref="SharedAppearanceSystem.SetData"/>,
 /// calling <see cref="OnAppearanceChange"/>, which calls almost everything else.
 
 /// Data for the (at most one) timer is stored in <see cref="ScreenTimerComponent"/>.
@@ -149,7 +149,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (text != null)
         {
             BuildTextLayers(uid, component, sprite);
-            DrawLayers(uid, component.LayerStatesToDraw);
+            DrawLayers(uid, component, component.LayerStatesToDraw);
         }
         if (target != null)
         {
@@ -159,7 +159,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
                 timer.Target = target.Value;
                 timer.Priority = priority;
                 BuildTimerLayers(uid, timer, component);
-                DrawLayers(uid, timer.LayerStatesToDraw);
+                DrawLayers(uid, component, timer.LayerStatesToDraw);
             }
             else
             {
@@ -189,7 +189,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
     }
 
     /// <summary>
-    ///     Word-wraps (and truncates) string to a string?[] based on
+    ///     Word-wraps (and truncates) a string to a string?[] based on
     ///     <see cref="ScreenComponent.RowLength"/> and <see cref="ScreenComponent.Rows"/>.
     /// </summary>
     private string?[] SegmentText(string text, ScreenComponent component)
@@ -302,12 +302,12 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
             return;
 
         var update = screen.ActiveUpdate;
-        var color = update != null && update.Color != null ? update.Color : screen.DefaultColor;
+        var color = update != null && update.Value.Color != null ? update.Value.Color : screen.DefaultColor;
 
         foreach (var (key, state) in layerStates.Where(pairs => pairs.Value != null))
         {
             sprite.LayerSetState(key, state);
-            sprite.LayerSetColor(key, color);
+            sprite.LayerSetColor(key, color.Value);
         }
     }
 
@@ -325,7 +325,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
             }
 
             BuildTimerLayers(uid, timer, screen);
-            DrawLayers(uid, timer.LayerStatesToDraw);
+            DrawLayers(uid, screen, timer.LayerStatesToDraw);
         }
     }
 
