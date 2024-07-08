@@ -35,12 +35,12 @@
   - type: ExtensionCableReceiver
   - type: Screen
   - type: DeviceNetwork
-    receiveFrequencyId: ShuttleTimer
+    receiveFrequencyId: Screen
 
 - type: entity
-  id: ArrivalsShuttleTimer
+  id: ArrivalsScreen
   parent: Screen
   name: arrivals screen
   components:
   - type: DeviceNetwork
-    receiveFrequencyId: ArrivalsShuttleTimer
+    receiveFrequencyId: ArrivalsScreen
