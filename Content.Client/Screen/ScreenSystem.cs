@@ -86,12 +86,16 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (!TryComp<SpriteComponent>(uid, out var sprite) || !TryComp<ScreenComponent>(uid, out var screen))
             return;
 
+        // TODO: check if this is necessary
+        // var update = screen.ActiveUpdate;
+        // var color = update != null && update.Color != null ? update.Color : screen.DefaultColor;
+
         for (var i = 0; i < screen.RowLength; i++)
         {
             sprite.LayerMapReserveBlank(TimerMapKey + i);
             timer.LayerStatesToDraw.Add(TimerMapKey + i, null);
             sprite.LayerSetRSI(TimerMapKey + i, new ResPath(TextPath));
-            sprite.LayerSetColor(TimerMapKey + i, screen.Color);
+            // sprite.LayerSetColor(TimerMapKey + i, color);
             sprite.LayerSetState(TimerMapKey + i, DefaultState);
         }
     }
@@ -123,10 +127,12 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (!TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        ClearLayerStates(uid, component, sprite);
-
+        // if updates is empty, we still want to clear the screen
         if (component.Updates.Count == 0)
+        {
+            ClearLayerStates(uid, component, sprite);
             return;
+        }
 
         ScreenUpdate first = component.Updates.First().Value;
         component.ActiveUpdate = first;
@@ -136,7 +142,9 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         var target = first.Timer;
         var priority = first.Priority;
 
-        component.Color = color != null ? color.Value : component.DefaultColor;
+        // component.Color = color != null ? color.Value : component.DefaultColor;
+
+        ClearLayerStates(uid, component, sprite);
 
         if (text != null)
         {
@@ -215,7 +223,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
                 sprite.LayerMapReserveBlank(key);
                 component.LayerStatesToDraw.Add(key, null);
                 sprite.LayerSetRSI(key, new ResPath(TextPath));
-                sprite.LayerSetColor(key, component.Color);
+                // sprite.LayerSetColor(key, component.Color);
                 sprite.LayerSetState(key, DefaultState);
             }
     }
@@ -286,15 +294,21 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
     }
 
     /// <summary>
-    ///     Draws a LayerStates dict by setting the sprite states individually.
+    ///     Draws a LayerStates dict by setting sprite states individually.
     /// </summary>
-    private void DrawLayers(EntityUid uid, Dictionary<string, string?> layerStates, SpriteComponent? sprite = null)
+    private void DrawLayers(EntityUid uid, ScreenComponent screen, Dictionary<string, string?> layerStates, SpriteComponent? sprite = null)
     {
         if (!Resolve(uid, ref sprite))
             return;
 
+        var update = screen.ActiveUpdate;
+        var color = update != null && update.Color != null ? update.Color : screen.DefaultColor;
+
         foreach (var (key, state) in layerStates.Where(pairs => pairs.Value != null))
+        {
             sprite.LayerSetState(key, state);
+            sprite.LayerSetColor(key, color);
+        }
     }
 
     public override void Update(float frameTime)

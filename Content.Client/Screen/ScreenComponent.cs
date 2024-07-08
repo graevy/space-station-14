@@ -14,12 +14,6 @@ public sealed partial class ScreenComponent : Component
     public const float PixelSize = 1f / EyeManager.PixelsPerMeter;
 
     /// <summary>
-    ///     The color of the text drawn.
-    /// </summary>
-    [DataField("color"), ViewVariables(VVAccess.ReadWrite)]
-    public Color Color = new Color(15, 151, 251);
-
-    /// <summary>
     ///     Color used for every ScreenUpdate that doesn't supply one
     ///     15,151,251 is the old ss13 color, from tg
     /// </summary>
