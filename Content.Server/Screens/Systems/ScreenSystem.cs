@@ -31,8 +31,7 @@ public sealed class ScreenSystem : EntitySystem
     /// </summary>
     private void OnPacketReceived(EntityUid uid, ScreenComponent component, DeviceNetworkPacketEvent args)
     {
-        args.Data.TryGetValue(ScreenMasks.Updates, out ScreenUpdate[]? updates);
-        if (updates == null)
+        if (!args.Data.TryGetValue(ScreenMasks.Updates, out ScreenUpdate[]? updates) || updates == null)
             return;
 
         // drop the packet if it's intended for a subnet (MapUid) that doesn't match our screen's
