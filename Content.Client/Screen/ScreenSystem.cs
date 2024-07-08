@@ -86,16 +86,11 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (!TryComp<SpriteComponent>(uid, out var sprite) || !TryComp<ScreenComponent>(uid, out var screen))
             return;
 
-        // TODO: check if this is necessary
-        // var update = screen.ActiveUpdate;
-        // var color = update != null && update.Color != null ? update.Color : screen.DefaultColor;
-
         for (var i = 0; i < screen.RowLength; i++)
         {
             sprite.LayerMapReserveBlank(TimerMapKey + i);
             timer.LayerStatesToDraw.Add(TimerMapKey + i, null);
             sprite.LayerSetRSI(TimerMapKey + i, new ResPath(TextPath));
-            // sprite.LayerSetColor(TimerMapKey + i, color);
             sprite.LayerSetState(TimerMapKey + i, DefaultState);
         }
     }
@@ -229,12 +224,9 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
     }
 
     /// <summary>
-    ///     Sets the states in the <see cref="ScreenComponent.LayerStatesToDraw"/> to match the component
-    ///     <see cref="ScreenComponent.Text"/> string?[].
+    ///     Sets the states in the <see cref="ScreenComponent.LayerStatesToDraw"/> to match the
+    ///     <see cref="ScreenComponent.ActiveUpdate.Text"/> string.
     /// </summary>
-    /// <remarks>
-    ///     Remember to set <see cref="ScreenComponent.Text"/> to a string?[] first.
-    /// </remarks>
     private void BuildTextLayers(EntityUid uid, ScreenComponent component, SpriteComponent sprite)
     {
         if (component.ActiveUpdate == null || component.ActiveUpdate.Value.Text == null)

@@ -2,17 +2,23 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Screen;
 
+/// <summary>
+///     Legacy byte facilitating appearancesystem updates. First target for a refactor. See more in the client ScreenSystem
+/// </summary>
 [Serializable, NetSerializable]
 public enum ScreenVisuals : byte
 {
     Update
-    // TODO: support for a small image, I think.
 }
 
+/// <summary>
+///     ScreenUpdates with lower ScreenPriority values display over others.
+/// </summary>
 [Serializable, NetSerializable]
 public enum ScreenPriority : byte
 {
     Nuke,
+    // brig only has to outprioritize default. nuke updates are on a different frequency
     Brig,
     Shuttle,
     Default
@@ -37,6 +43,10 @@ public sealed class ScreenMasks
     public static readonly string Nuke = Loc.GetString("screen-nuke");
 }
 
+/// <summary>
+///     ScreenUpdates get passed by the server into a client ScreenComponent's "Updates" SortedDict,
+///     which only displays the highest priority update.
+/// </summary>
 [Serializable, NetSerializable]
 public struct ScreenUpdate
 {
@@ -50,15 +60,4 @@ public struct ScreenUpdate
     {
         Subnet = subnet; Priority = priority; Text = text; Timer = timer; Color = color;
     }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Subnet, Priority, Text, Timer, Color);
-    }
-
-    public bool HasTimer()
-    {
-        return Timer != null;
-    }
-
 }

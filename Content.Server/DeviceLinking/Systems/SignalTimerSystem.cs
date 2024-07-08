@@ -71,7 +71,7 @@ public sealed class SignalTimerSystem : EntitySystem
         _audio.PlayPvs(signalTimer.DoneSound, uid);
         _signalSystem.InvokePort(uid, signalTimer.TriggerPort);
 
-        var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, signalTimer.Label);
+        var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Default, signalTimer.Label);
         _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
 
         if (_ui.HasUi(uid, SignalTimerUiKey.Key))
