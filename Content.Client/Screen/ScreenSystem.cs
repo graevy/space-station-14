@@ -75,7 +75,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         component.TextOffset = Vector2.Multiply(ScreenComponent.PixelSize, component.TextOffset);
         component.TimerOffset = Vector2.Multiply(ScreenComponent.PixelSize, component.TimerOffset);
 
-        ClearScreen(uid, component, sprite);
+        ClearLayerStates(uid, component, sprite);
     }
 
     /// <summary>
@@ -109,6 +109,7 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
             return;
 
         component.Updates[update.Priority] = update;
+
         RefreshActiveUpdate(uid, component);
     }
 
@@ -122,15 +123,12 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (!TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        ClearScreen(uid, component, sprite);
+        ClearLayerStates(uid, component, sprite);
 
         if (component.Updates.Count == 0)
             return;
 
         ScreenUpdate first = component.Updates.First().Value;
-        if (first == component.ActiveUpdate)
-            return;
-
         component.ActiveUpdate = first;
 
         var color = first.Color;
@@ -142,7 +140,6 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
 
         if (text != null)
         {
-            component.Text = SegmentText(text, component);
             BuildTextLayers(uid, component, sprite);
             DrawLayers(uid, component.LayerStatesToDraw);
         }
@@ -172,15 +169,14 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
         if (!TryComp<ScreenTimerComponent>(uid, out var timer) || !TryComp<SpriteComponent>(uid, out var sprite))
             return;
 
-        var priority = timer.Priority;
-        screen.Updates.Remove(priority);
+        screen.Updates.Remove(timer.Priority);
 
         foreach (var key in timer.LayerStatesToDraw.Keys)
             sprite.RemoveLayer(key);
 
         RemComp<ScreenTimerComponent>(uid);
 
-        ClearScreen(uid, screen, sprite);
+        ClearLayerStates(uid, screen, sprite);
         RefreshActiveUpdate(uid, screen);
     }
 
@@ -200,12 +196,6 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
             segmented[i / segment] = text.Substring(i, Math.Min(text.Length - i, segment)).Trim();
 
         return segmented;
-    }
-
-    private void ClearScreen(EntityUid uid, ScreenComponent component, SpriteComponent sprite)
-    {
-        ClearLayerStates(uid, component, sprite);
-        BuildTextLayers(uid, component, sprite);
     }
 
     /// <summary>
@@ -239,10 +229,15 @@ public sealed class ScreenSystem : VisualizerSystem<ScreenComponent>
     /// </remarks>
     private void BuildTextLayers(EntityUid uid, ScreenComponent component, SpriteComponent sprite)
     {
+        if (component.ActiveUpdate == null || component.ActiveUpdate.Value.Text == null)
+            return;
+
+        var text = SegmentText(component.ActiveUpdate.Value.Text, component);
+
         // by rows and then columns
-        for (var rowIdx = 0; rowIdx < Math.Min(component.Text.Length, component.Rows); rowIdx++)
+        for (var rowIdx = 0; rowIdx < Math.Min(text.Length, component.Rows); rowIdx++)
         {
-            var row = component.Text[rowIdx];
+            var row = text[rowIdx];
             if (row == null)
                 continue;
             var min = Math.Min(row.Length, component.RowLength);

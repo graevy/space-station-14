@@ -201,10 +201,10 @@ namespace Content.Server.RoundEnd
             var shuttle = _shuttle.GetShuttle();
             if (shuttle != null && TryComp<DeviceNetworkComponent>(shuttle, out var net))
             {
-                var shuttleUpdate = new ScreenUpdate(GetNetEntity(shuttle), ScreenPriority.Shuttle, ScreenMasks.ETA, countdownTime);
+                var shuttleUpdate = new ScreenUpdate(GetNetEntity(shuttle), ScreenPriority.Shuttle, ScreenMasks.ETA, _gameTiming.CurTime + countdownTime);
                 var sourceUpdate = new ScreenUpdate(GetNetEntity(GetCentcomm()), ScreenPriority.Shuttle, ScreenMasks.ETA,
-                countdownTime + TimeSpan.FromSeconds(_shuttle.TransitTime + _cfg.GetCVar(CCVars.EmergencyShuttleDockTime)));
-                var destUpdate = new ScreenUpdate(GetNetEntity(GetStation()), ScreenPriority.Shuttle, ScreenMasks.ETA, countdownTime);
+                    _gameTiming.CurTime + countdownTime + TimeSpan.FromSeconds(_shuttle.TransitTime + _cfg.GetCVar(CCVars.EmergencyShuttleDockTime)));
+                var destUpdate = new ScreenUpdate(GetNetEntity(GetStation()), ScreenPriority.Shuttle, ScreenMasks.ETA, _gameTiming.CurTime + countdownTime);
 
                 var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate, destUpdate } };
                 _deviceNetworkSystem.QueuePacket(shuttle.Value, null, payload, net.TransmitFrequency);

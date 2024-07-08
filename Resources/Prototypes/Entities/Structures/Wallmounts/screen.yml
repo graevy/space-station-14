@@ -15,7 +15,7 @@
   - type: Clickable
   - type: Appearance
   - type: Rotatable
-  - type: ScreenVisuals
+  - type: Screen
     textOffset: 0,3
     timerOffset: 0,-4
     rows: 2
@@ -33,7 +33,6 @@
     enabled: false
     usesApcPower: true
   - type: ExtensionCableReceiver
-  - type: Screen
   - type: DeviceNetwork
     receiveFrequencyId: Screen
 

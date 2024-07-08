@@ -25,6 +25,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Content.Server.Nuke;
@@ -35,6 +36,7 @@ public sealed class NukeSystem : EntitySystem
     [Dependency] private readonly ChatSystem _chatSystem = default!;
     [Dependency] private readonly DeviceNetworkSystem _network = default!;
     [Dependency] private readonly ExplosionSystem _explosions = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustRandom _random = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly ItemSlotsSystem _itemSlots = default!;
@@ -481,7 +483,8 @@ public sealed class NukeSystem : EntitySystem
         // display nuke countdown on local screens
         if (TryComp<DeviceNetworkComponent>(uid, out var nukeNet))
         {
-            var update = new ScreenUpdate(GetNetEntity(nukeXform.MapUid), ScreenPriority.Nuke, ScreenMasks.Nuke, TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
+            var update = new ScreenUpdate(GetNetEntity(nukeXform.MapUid), ScreenPriority.Nuke,
+                ScreenMasks.Nuke, _timing.CurTime + TimeSpan.FromSeconds(component.RemainingTime), Color.Red);
             var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { update } };
             _network.QueuePacket(uid, null, payload, nukeNet.TransmitFrequency);
         }

@@ -142,8 +142,6 @@ public sealed class SignalTimerSystem : EntitySystem
             // if you delved deep into appearance update batching
             var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, component.Label);
             _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
-            // _appearanceSystem.SetData(uid, ScreenVisuals.DefaultText, component.Label);
-            // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, component.Label);
         }
     }
 
@@ -157,7 +155,7 @@ public sealed class SignalTimerSystem : EntitySystem
             return;
 
         component.Delay = args.Delay.TotalSeconds;
-        var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, null, TimeSpan.FromSeconds(component.Delay));
+        var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, null, _gameTiming.CurTime + TimeSpan.FromSeconds(component.Delay));
         _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
         // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, component.Delay);
     }
@@ -201,8 +199,6 @@ public sealed class SignalTimerSystem : EntitySystem
         {
             var update = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Brig, null, timer.TriggerTime);
             _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
-            // _appearanceSystem.SetData(uid, ScreenVisuals.TargetTime, timer.TriggerTime, appearance);
-            // _appearanceSystem.SetData(uid, ScreenVisuals.ScreenText, string.Empty, appearance);
         }
 
         _signalSystem.InvokePort(uid, component.StartPort);

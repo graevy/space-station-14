@@ -39,7 +39,7 @@ public sealed class ScreenSystem : EntitySystem
 
         foreach (var update in updates)
             // the griduid check handled some null mapuid edge case involving hyperspace iirc
-            if (update != null && TryGetEntity(update.Subnet, out var subnet) && (subnet == timerXform.MapUid || subnet == timerXform.GridUid))
+            if (TryGetEntity(update.Subnet, out var subnet) && (subnet == timerXform.MapUid || subnet == timerXform.GridUid))
                 _appearanceSystem.SetData(uid, ScreenVisuals.Update, update);
     }
 }

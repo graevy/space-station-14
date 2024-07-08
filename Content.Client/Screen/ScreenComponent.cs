@@ -57,17 +57,6 @@ public sealed partial class ScreenComponent : Component
     public int RowLength = 5;
 
     /// <summary>
-    ///     Text the screen should show.
-    /// </summary>
-    [DataField("text"), ViewVariables(VVAccess.ReadWrite)]
-    public string?[] Text = new string?[2];
-
-    /// <summary>
-    ///     Text the screen will draw whenever appearance is updated.
-    /// </summary>
-    // public string?[] TextToDraw = new string?[2];
-
-    /// <summary>
     ///     Per-character layers, for mapping into the sprite component.
     /// </summary>
     [DataField("layerStatesToDraw")]
@@ -80,6 +69,8 @@ public sealed partial class ScreenComponent : Component
     [DataField("secondFormat")]
     public string SecondFormat = "D2";
 
+    [ViewVariables(VVAccess.ReadWrite)]
     public ScreenUpdate? ActiveUpdate;
+    [ViewVariables(VVAccess.ReadWrite)]
     public SortedDictionary<ScreenPriority, ScreenUpdate> Updates = new();
 }

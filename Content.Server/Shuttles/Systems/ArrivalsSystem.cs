@@ -220,13 +220,14 @@ public sealed class ArrivalsSystem : EntitySystem
                 sourceMap = station == null ? null : Transform(station.Value)?.MapUid;
                 arrivalsDelay += RoundStartFTLDuration;
                 component.FirstRun = false;
-                updates[2] = new ScreenUpdate(GetNetEntity(Transform(args.TargetCoordinates.EntityId).MapUid), ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
+                updates[2] = new ScreenUpdate(GetNetEntity(Transform(args.TargetCoordinates.EntityId).MapUid),
+                    ScreenPriority.Shuttle, ScreenMasks.ETA, _timing.CurTime + ftlTime);
             }
             else
                 sourceMap = args.FromMapUid;
 
-            updates[0] = new ScreenUpdate(GetNetEntity(shuttleUid), ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime);
-            updates[1] = new ScreenUpdate(GetNetEntity(sourceMap), ScreenPriority.Shuttle, ScreenMasks.ETA, ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
+            updates[0] = new ScreenUpdate(GetNetEntity(shuttleUid), ScreenPriority.Shuttle, ScreenMasks.ETA, _timing.CurTime + ftlTime);
+            updates[1] = new ScreenUpdate(GetNetEntity(sourceMap), ScreenPriority.Shuttle, ScreenMasks.ETA, _timing.CurTime + ftlTime + TimeSpan.FromSeconds(arrivalsDelay));
 
             var payload = new NetworkPayload { [ScreenMasks.Updates] = updates };
             _deviceNetworkSystem.QueuePacket(shuttleUid, null, payload, netComp.TransmitFrequency);
@@ -275,17 +276,9 @@ public sealed class ArrivalsSystem : EntitySystem
 
         if (TryComp<DeviceNetworkComponent>(uid, out var netComp))
         {
-            var shuttleUpdate = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Shuttle, ScreenMasks.ETD, dockTime);
-            var sourceUpdate = new ScreenUpdate(GetNetEntity(args.MapUid), ScreenPriority.Shuttle, ScreenMasks.ETD, dockTime);
-            var payload = new NetworkPayload
-            {
-                [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate }
-                // [ScreenMasks.ShuttleMap] = uid,
-                // [ScreenMasks.ShuttleTime] = dockTime,
-                // [ScreenMasks.SourceMap] = args.MapUid,
-                // [ScreenMasks.SourceTime] = dockTime,
-                // [ScreenMasks.Docked] = true
-            };
+            var shuttleUpdate = new ScreenUpdate(GetNetEntity(uid), ScreenPriority.Shuttle, ScreenMasks.ETD, _timing.CurTime + dockTime);
+            var sourceUpdate = new ScreenUpdate(GetNetEntity(args.MapUid), ScreenPriority.Shuttle, ScreenMasks.ETD, _timing.CurTime + dockTime);
+            var payload = new NetworkPayload { [ScreenMasks.Updates] = new ScreenUpdate[] { shuttleUpdate, sourceUpdate } };
             _deviceNetworkSystem.QueuePacket(uid, null, payload, netComp.TransmitFrequency);
         }
     }
